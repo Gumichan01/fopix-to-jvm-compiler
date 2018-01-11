@@ -104,7 +104,7 @@ let rec translate p env : T.t * environment =
 
   - Final answer:
     your code should contain a final [Ireturn] that should
-    return the value of the last DefineValue (supposed to be
+    return the value of the last DefVal (supposed to be
     an Integer).
 
   - Function Call Convention:
