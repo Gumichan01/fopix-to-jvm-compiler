@@ -160,6 +160,12 @@ and expression runtime = function
   | FunCall (fexpr, args) ->
     failwith "Student! This is your job!"
 
+and test_condition runtime cond etrue efalse =
+  match cond with
+  | VInt(1) | VBool(true) -> expression runtime etrue
+  | VInt(0) | VBool(false) -> expression runtime efalse
+  | _ -> failwith "Unrecognized result of contition (IfThenElse)"
+
 and binop runtime op e1 e2 =
   let v1 = expression runtime e1 in
   let v2 = expression runtime e2 in
