@@ -1,0 +1,15 @@
+S src
+S src/utilities
+S src/lib
+S src/lib/pprint
+S src/common
+S src/javix
+S src/fopix
+B _build
+B _build/src
+B _build/src/utilities
+B _build/src/lib
+B _build/src/lib/pprint
+B _build/src/common
+B _build/src/javix
+B _build/src/fopix
