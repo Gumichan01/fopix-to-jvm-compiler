@@ -149,7 +149,8 @@ and expression runtime = function
     expression runtime e
 
   | IfThenElse (c, t, f) ->
-    failwith "Student! This is your job!"
+    let condv = expression runtime c in
+    test_condition runtime condv t f
 
   | BinOp (Add|Sub|Mul|Div|Mod as op, e1, e2) ->
     binop runtime op e1 e2
