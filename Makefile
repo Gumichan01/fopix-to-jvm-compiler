@@ -69,3 +69,6 @@ doc: byte
 	rm -f $(TARGET).docdir/style.css 2> /dev/null
 	mv $(TARGET).docdir/* doc/html
 	rm $(TARGET).docdir
+
+run: all-generic
+	@ rlwrap ./flap -s fopix --interactive -r true
