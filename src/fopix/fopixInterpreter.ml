@@ -155,8 +155,17 @@ and expression runtime = function
   | BinOp (Add|Sub|Mul|Div|Mod as op, e1, e2) ->
     binop runtime op e1 e2
 
-  | BinOp _ | BlockNew _ | BlockGet _ | BlockSet _ ->
-    failwith "Student! This is your job!"
+  | BinOp (Eq|Le|Lt|Ge|Gt as op, e1, e2) ->
+    comp_binop runtime op e1 e2
+
+  | BlockNew e ->
+    create_block runtime e
+
+  | BlockGet (e1,e2)  ->
+    get_from_block runtime e1 e2
+
+  | BlockSet (e1,e2,e3) ->
+    set_from_block runtime e1 e2 e3
 
   | FunCall (fexpr, args) ->
     failwith "Student! This is your job!"
@@ -173,6 +182,38 @@ and binop runtime op e1 e2 =
   match evaluation_of_binary_symbol op v1 v2 with
   | Some v -> v
   | None -> error [] "Invalid binary operation."
+
+and comp_binop runtime op e1 e2 =
+  failwith "En cours..."
+
+and create_block runtime e = match (expression runtime e) with
+  | VInt(n) ->
+    let d = VInt(0) in
+    let memory = Memory.allocate memory n d in
+    VLocation(memory)
+  | _ -> failwith "Incorrect block size"
+
+and get_from_block runtime be ie = match (expression runtime be) with
+  | VLocation(l) -> get_from_location runtime l ie
+  | _ -> failwith "Incorrect block value"
+
+and get_from_location runtime l ie = match (expression runtime ie) with
+  | VInt(n) ->
+    let block = Memory.dereference memory l in
+    let value = Memory.read block n in
+    value
+  | _ -> failwith "Incorrect index value"
+
+and set_from_block runtime be ie ve = match (expression runtime be) with
+  | VLocation(l) -> set_from_location runtime l ie ve
+  | _ -> failwith "Incorrect block value"
+
+and set_from_location runtime l ie ve = match (expression runtime ie) with
+  | VInt(n) ->
+    let block = Memory.dereference memory l in
+    let _ = Memory.write block n (expression runtime ve) in
+    VUnit
+  | _ -> failwith "Incorrect index value"
 
 and extract_observable runtime runtime' =
   let rec substract new_environment env env' =
