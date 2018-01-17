@@ -152,11 +152,8 @@ and expression runtime = function
     let condv = expression runtime c in
     test_condition runtime condv t f
 
-  | BinOp (Add|Sub|Mul|Div|Mod as op, e1, e2) ->
+  | BinOp (op, e1, e2) ->
     binop runtime op e1 e2
-
-  | BinOp (Eq|Le|Lt|Ge|Gt as op, e1, e2) ->
-    comp_binop runtime op e1 e2
 
   | BlockNew e ->
     create_block runtime e
@@ -182,9 +179,6 @@ and binop runtime op e1 e2 =
   match evaluation_of_binary_symbol op v1 v2 with
   | Some v -> v
   | None -> error [] "Invalid binary operation."
-
-and comp_binop runtime op e1 e2 =
-  failwith "En cours..."
 
 and create_block runtime e =
   match (expression runtime e) with
