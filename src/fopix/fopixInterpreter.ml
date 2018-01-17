@@ -168,10 +168,15 @@ and expression runtime = function
     fun_call runtime fexpr args
 
 and fun_call runtime fexpr args =
-  let values = List.map (expression runtime) args in
+  (* values must be used as parameters of f *)
+  let (*values*) _ = List.map (expression runtime) args in
+  (* Normally I should update the runtime with (new identifier, v),
+     v is an element in values, by using Environment.bind and a fresh identifier
+     (I guess, but I am not sure) *)
   match expression runtime fexpr with
-  | VFun f -> failwith "TODO the call itself" (*f values*)
+  | VFun f -> failwith "TODO the call itself" (* I am stcuk at this point *)
   | _ -> failwith "Invalid function call"
+
 
 and test_condition runtime cond etrue efalse =
   match cond with
