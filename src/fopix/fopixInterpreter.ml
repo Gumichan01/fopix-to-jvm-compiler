@@ -188,6 +188,7 @@ and comp_binop runtime op e1 e2 =
 
 and create_block runtime e =
   match (expression runtime e) with
+  | VInt(0) -> failwith "Invalid block size"
   | VInt(n) ->
     let memory = Memory.allocate memory n (VInt(0)) in
     VLocation(memory)
