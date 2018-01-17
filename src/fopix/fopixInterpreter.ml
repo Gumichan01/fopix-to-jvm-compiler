@@ -165,7 +165,13 @@ and expression runtime = function
     set_from_block runtime e1 e2 e3
 
   | FunCall (fexpr, args) ->
-    failwith "Student! This is your job!"
+    fun_call runtime fexpr args
+
+and fun_call runtime fexpr args =
+  let values = List.map (expression runtime) args in
+  match expression runtime fexpr with
+  | VFun f -> failwith "TODO the call itself" (*f values*)
+  | _ -> failwith "Invalid function call"
 
 and test_condition runtime cond etrue efalse =
   match cond with
