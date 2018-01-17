@@ -188,8 +188,7 @@ and comp_binop runtime op e1 e2 =
 
 and create_block runtime e = match (expression runtime e) with
   | VInt(n) ->
-    let d = VInt(0) in
-    let memory = Memory.allocate memory n d in
+    let memory = Memory.allocate memory n (VInt(0)) in
     VLocation(memory)
   | _ -> failwith "Incorrect block size"
 
@@ -200,8 +199,7 @@ and get_from_block runtime be ie = match (expression runtime be) with
 and get_from_location runtime l ie = match (expression runtime ie) with
   | VInt(n) ->
     let block = Memory.dereference memory l in
-    let value = Memory.read block n in
-    value
+    (Memory.read block n)
   | _ -> failwith "Incorrect index value"
 
 and set_from_block runtime be ie ve = match (expression runtime be) with
