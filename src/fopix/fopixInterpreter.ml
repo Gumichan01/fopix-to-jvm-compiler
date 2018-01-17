@@ -186,32 +186,37 @@ and binop runtime op e1 e2 =
 and comp_binop runtime op e1 e2 =
   failwith "En cours..."
 
-and create_block runtime e = match (expression runtime e) with
+and create_block runtime e =
+  match (expression runtime e) with
   | VInt(n) ->
     let memory = Memory.allocate memory n (VInt(0)) in
     VLocation(memory)
-  | _ -> failwith "Incorrect block size"
+  | _ -> failwith "Bad type of size"
 
-and get_from_block runtime be ie = match (expression runtime be) with
+and get_from_block runtime be ie =
+  match (expression runtime be) with
   | VLocation(l) -> get_from_location runtime l ie
-  | _ -> failwith "Incorrect block value"
+  | _ -> failwith "Incorrect type value"
 
-and get_from_location runtime l ie = match (expression runtime ie) with
+and get_from_location runtime l ie =
+  match (expression runtime ie) with
   | VInt(n) ->
     let block = Memory.dereference memory l in
     (Memory.read block n)
-  | _ -> failwith "Incorrect index value"
+  | _ -> failwith "Incorrect type of index value"
 
-and set_from_block runtime be ie ve = match (expression runtime be) with
+and set_from_block runtime be ie ve =
+  match (expression runtime be) with
   | VLocation(l) -> set_from_location runtime l ie ve
-  | _ -> failwith "Incorrect block value"
+  | _ -> failwith "Incorrect type of block value"
 
-and set_from_location runtime l ie ve = match (expression runtime ie) with
+and set_from_location runtime l ie ve =
+  match (expression runtime ie) with
   | VInt(n) ->
     let block = Memory.dereference memory l in
     let _ = Memory.write block n (expression runtime ve) in
     VUnit
-  | _ -> failwith "Incorrect index value"
+  | _ -> failwith "Incorrect type of index value"
 
 and extract_observable runtime runtime' =
   let rec substract new_environment env env' =
