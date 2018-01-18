@@ -94,35 +94,38 @@ let basic_program code =
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
+  (* TODO: Find a name more relevant than 'acc' *)
   let rec program env defs =
-    let code = List.(flatten (map translate_definition defs))
+    let acc = ([],env) in
+    let code, env = List.fold_left translate_definition acc defs
     in basic_program code, env
 
-  and translate_definition = function
-    | S.DefVal (i, e) -> failwith "En cours..."
+  and translate_definition acc = function
+    | S.DefVal (i, e) ->
+      let _, env = acc in
+      let _ = translate_expr env e in
+      acc
     | S.DefFun (fi, fo, e) -> failwith "En cours..."
 
-  and translate_expr : FopixAST.expression -> JavixAST.labelled_instruction =
-    function
-    | Num i -> None, Bipush(i)
-
-    | FunName _ ->
+  and translate_expr env = function
+    | S.Num i -> None, T.Bipush(i)
+    | S.FunName _ ->
       failwith "FunName - Students! this is your job!"
-    | Var _ ->
+    | S.Var _ ->
       failwith "Var - Students! this is your job!"
-    | Let _ ->
+    | S.Let _ ->
       failwith "Let in - Students! this is your job!"
-    | IfThenElse _ ->
+    | S.IfThenElse _ ->
       failwith "If then else - Students! this is your job!"
-    | BinOp _ ->
+    | S.BinOp _ ->
       failwith "Binop - Students! this is your job!"
-    | BlockNew _ ->
+    | S.BlockNew _ ->
       failwith "BlockNew - Students! this is your job!"
-    | BlockGet _ ->
+    | S.BlockGet _ ->
       failwith "BlockGet - Students! this is your job!"
-    | BlockSet _ ->
+    | S.BlockSet _ ->
       failwith "BlockSet - Students! this is your job!"
-    | FunCall _ ->
+    | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
   in program env p
 
