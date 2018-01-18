@@ -149,8 +149,9 @@ and declaration runtime = function
     let v = expression runtime e in
     { environment  = Environment.bind runtime.environment i v;
       fenvironment = runtime.fenvironment }
-  | DefFun _ ->
-    runtime
+  | DefFun (fid, arg, e) ->
+  { environment  = runtime.environment;
+    fenvironment = Environment.fbind runtime.fenvironment fid arg e }
 
 and expression runtime = function
   | Num n -> VInt n
@@ -193,9 +194,8 @@ and fun_call runtime fexpr args =
   | VFun f ->
     let (argsi, codexpr) = Environment.flookup f runtime.fenvironment in
     let nenv = mbind runtime.environment argsi values in
-    let nruntime = { environment = nenv ;fenvironment = runtime.fenvironment} in
+    let nruntime = { environment = nenv ; fenvironment = runtime.fenvironment} in
     expression nruntime codexpr
-  (*failwith "TODO the call itself"*) (* I am stcuk at this point *)
   | _ -> failwith "Invalid function call"
 
 (* args and values must have the same size [pre-condition] *)
