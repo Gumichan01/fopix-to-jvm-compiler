@@ -74,12 +74,12 @@ module Environment : sig
   val fbind   : tf -> identifier -> formals -> expression -> tf
   exception UnboundIdentifier of identifier
   val lookup  : identifier -> t -> value
-  (*val flookup  : identifier -> tf -> expression*)
+  val flookup  : identifier -> tf -> formals * expression
   val last    : t -> (identifier * value * t) option
   val print   : t -> string
 end = struct
   type t = (identifier * value) list
-  type tf = (identifier * formals * expression) list
+  type tf = (identifier * (formals * expression)) list
 
   let initial = []
 
@@ -87,7 +87,7 @@ end = struct
 
   let bind e x v = (x, v) :: e
 
-  let fbind en i a e = (i, a, e) :: en
+  let fbind en i a e = (i, (a, e)) :: en
 
   exception UnboundIdentifier of identifier
 
@@ -97,11 +97,11 @@ end = struct
     with Not_found ->
       raise (UnboundIdentifier x)
 
-  let flookup (i,a,_) e =
+  let flookup x e =
     try
-      List.assoc (i,a) e
+      List.assoc x e
     with Not_found ->
-      raise (UnboundIdentifier i)
+      raise (UnboundIdentifier x)
 
   let last = function
     | [] -> None
@@ -188,13 +188,24 @@ and expression runtime = function
 
 and fun_call runtime fexpr args =
   (* values must be used as parameters of f *)
-  let (*values*) _ = List.map (expression runtime) args in
-  (* Normally I should update the runtime with (new identifier, v),
-     v is an element in values, by using Environment.bind and a fresh identifier
-     (I guess, but I am not sure) *)
+  let values = List.map (expression runtime) args in
   match expression runtime fexpr with
-  | VFun f -> failwith "TODO the call itself" (* I am stcuk at this point *)
+  | VFun f ->
+    let (argsi, codexpr) = Environment.flookup f runtime.fenvironment in
+    let nenv = mbind runtime.environment argsi values in
+    let nruntime = { environment = nenv ;fenvironment = runtime.fenvironment} in
+    expression nruntime codexpr
+  (*failwith "TODO the call itself"*) (* I am stcuk at this point *)
   | _ -> failwith "Invalid function call"
+
+(* args and values must have the same size [pre-condition] *)
+and mbind env args values =
+  match args, values with
+  | [], [] -> env
+  | [], _ | _, [] -> assert false (* the pre-condition is not true *)
+  | a::qa, v::qv ->
+    let nenv = Environment.bind env a v in
+    mbind nenv qa qv
 
 
 and test_condition runtime cond etrue efalse =
