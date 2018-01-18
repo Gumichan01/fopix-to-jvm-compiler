@@ -104,8 +104,8 @@ let rec translate p env : T.t * environment =
 
   and translate_expr : FopixAST.expression -> JavixAST.labelled_instruction =
     function
-    | Num _ ->
-      failwith "Num - Students! this is your job!"
+    | Num i -> None, Bipush(i)
+
     | FunName _ ->
       failwith "FunName - Students! this is your job!"
     | Var _ ->
