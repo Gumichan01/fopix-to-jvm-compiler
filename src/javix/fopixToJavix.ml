@@ -94,7 +94,15 @@ let basic_program code =
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
-  failwith "Student! This is your job!"
+  let rec program env defs =
+    let code = List.(flatten (map definition defs))
+    in basic_program code, env
+  and definition = function
+    | S.DefVal (i, e) -> failwith "En cours..."
+    | S.DefFun (fi, fo, e) -> failwith "En cours..."
+  and expression e =
+    failwith "En cours..."
+  in program env p
 
 (** Remarks:
   - When using this compiler from fopix to javix, flap will
