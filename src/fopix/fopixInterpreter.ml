@@ -67,18 +67,27 @@ let evaluation_of_binary_symbol = function
 
 module Environment : sig
   type t
+  type tf
   val initial : t
+  val finitial : tf
   val bind    : t -> identifier -> value -> t
+  val fbind   : tf -> identifier -> formals -> expression -> tf
   exception UnboundIdentifier of identifier
   val lookup  : identifier -> t -> value
+  (*val flookup  : identifier -> tf -> expression*)
   val last    : t -> (identifier * value * t) option
   val print   : t -> string
 end = struct
   type t = (identifier * value) list
+  type tf = (identifier * formals * expression) list
 
   let initial = []
 
+  let finitial = []
+
   let bind e x v = (x, v) :: e
+
+  let fbind en i a e = (i, a, e) :: en
 
   exception UnboundIdentifier of identifier
 
@@ -87,6 +96,12 @@ end = struct
       List.assoc x e
     with Not_found ->
       raise (UnboundIdentifier x)
+
+  let flookup (i,a,_) e =
+    try
+      List.assoc (i,a) e
+    with Not_found ->
+      raise (UnboundIdentifier i)
 
   let last = function
     | [] -> None
@@ -109,6 +124,7 @@ end
 
 type runtime = {
   environment : Environment.t;
+  fenvironment : Environment.tf;
 }
 
 type observable = {
@@ -117,6 +133,7 @@ type observable = {
 
 let initial_runtime () = {
   environment = Environment.initial;
+  fenvironment = Environment.finitial;
 }
 
 (** 640k ought to be enough for anybody -- B.G. *)
@@ -130,7 +147,8 @@ let rec evaluate runtime ast =
 and declaration runtime = function
   | DefVal (i, e) ->
     let v = expression runtime e in
-    { environment = Environment.bind runtime.environment i v }
+    { environment  = Environment.bind runtime.environment i v;
+      fenvironment = runtime.fenvironment }
   | DefFun _ ->
     runtime
 
@@ -144,7 +162,8 @@ and expression runtime = function
   | Let (x, ex, e) ->
     let v = expression runtime ex in
     let runtime =
-     { environment = Environment.bind runtime.environment x v }
+     { environment  = Environment.bind runtime.environment x v;
+       fenvironment = runtime.fenvironment }
     in
     expression runtime e
 
