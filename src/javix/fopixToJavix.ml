@@ -102,10 +102,12 @@ let rec translate p env : T.t * environment =
 
   and translate_definition acc = function
     | S.DefVal (i, e) ->
+      (* Don't know what to do yet with it so I'm not using the vars for
+         the moment... *)
       let _, env = acc in
       let _ = translate_expr env e in
       acc
-    | S.DefFun (fi, fo, e) -> failwith "En cours..."
+    | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
   and translate_expr env = function
     | S.Num i -> None, T.Bipush(i)
