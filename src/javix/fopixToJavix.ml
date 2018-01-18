@@ -97,11 +97,33 @@ let rec translate p env : T.t * environment =
   let rec program env defs =
     let code = List.(flatten (map translate_definition defs))
     in basic_program code, env
+
   and translate_definition = function
     | S.DefVal (i, e) -> failwith "En cours..."
     | S.DefFun (fi, fo, e) -> failwith "En cours..."
-  and translate_expr e =
-    failwith "En cours..."
+
+  and translate_expr : FopixAST.expression -> JavixAST.labelled_instruction =
+    function
+    | Num _ ->
+      failwith "Num - Students! this is your job!"
+    | FunName _ ->
+      failwith "FunName - Students! this is your job!"
+    | Var _ ->
+      failwith "Var - Students! this is your job!"
+    | Let _ ->
+      failwith "Let in - Students! this is your job!"
+    | IfThenElse _ ->
+      failwith "If then else - Students! this is your job!"
+    | BinOp _ ->
+      failwith "Binop - Students! this is your job!"
+    | BlockNew _ ->
+      failwith "BlockNew - Students! this is your job!"
+    | BlockGet _ ->
+      failwith "BlockGet - Students! this is your job!"
+    | BlockSet _ ->
+      failwith "BlockSet - Students! this is your job!"
+    | FunCall _ ->
+      failwith "FunCall - Students! this is your job!"
   in program env p
 
 (** Remarks:
