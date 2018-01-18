@@ -95,12 +95,12 @@ let basic_program code =
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
   let rec program env defs =
-    let code = List.(flatten (map definition defs))
+    let code = List.(flatten (map translate_definition defs))
     in basic_program code, env
-  and definition = function
+  and translate_definition = function
     | S.DefVal (i, e) -> failwith "En cours..."
     | S.DefFun (fi, fo, e) -> failwith "En cours..."
-  and expression e =
+  and translate_expr e =
     failwith "En cours..."
   in program env p
 
