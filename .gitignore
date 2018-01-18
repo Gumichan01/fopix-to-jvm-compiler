@@ -2,3 +2,5 @@ _build
 flap
 flap.byte
 flap.native
+fetch-letouzey.sh
+pull-origin.sh
