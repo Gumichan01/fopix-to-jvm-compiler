@@ -109,23 +109,28 @@ let rec translate p env : T.t * environment =
       acc
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
+  (* I think I understood what you tried to to @Yves, and I think that
+     translate_expr has this type : environment-> S -> labelled_instruction * environment
+
+     Maybe I am wrong but we should ask the teacher for confirmation
+  *)
   and translate_expr env = function
     | S.Num i -> None, T.Bipush(i)
     | S.FunName fn ->
-      let _ = { nextvar = env.nextvar; variables = env.variables;
+      (*let _ = { nextvar = env.nextvar; variables = env.variables;
                    function_labels = (fn, T.Label(fn))::env.function_labels;
                    function_formals = env.function_formals} in
-                   None, T.Comment(";what should I put?")
-      (*failwith "FunName - Students! this is your job!"*)
+                   None, T.Comment(";what should I put?")*)
+      failwith "FunName - Students! this is your job!"
     | S.Var v ->
-    let _ = { nextvar = env.nextvar; variables = (v, T.Var(0))::env.variables;
-                 function_labels = env.function_labels;
-                 function_formals = env.function_formals} in
-                 None, T.Comment(";Should I put 'T.Astore v'?")
-      (*failwith "Var - Students! this is your job!"*)
+      (*let _ = { nextvar = env.nextvar; variables = (v, T.Var(0))::env.variables;
+                function_labels = env.function_labels;
+                function_formals = env.function_formals} in
+                None, T.Comment(";Should I put 'T.Astore v'?")*)
+      failwith "Var - Students! this is your job!"
     | S.Let _ ->
       failwith "Let in - Students! this is your job!"
-    | S.IfThenElse _ ->
+    | S.IfThenElse (cond, e1, e2) ->
       failwith "If then else - Students! this is your job!"
     | S.BinOp _ ->
       failwith "Binop - Students! this is your job!"
