@@ -117,8 +117,12 @@ let rec translate p env : T.t * environment =
                    function_formals = env.function_formals} in
                    None, T.Comment(";what should I put?")
       (*failwith "FunName - Students! this is your job!"*)
-    | S.Var _ ->
-      failwith "Var - Students! this is your job!"
+    | S.Var v ->
+    let _ = { nextvar = env.nextvar; variables = (v, T.Var(0))::env.variables;
+                 function_labels = env.function_labels;
+                 function_formals = env.function_formals} in
+                 None, T.Comment(";Should I put 'T.Astore v'?")
+      (*failwith "Var - Students! this is your job!"*)
     | S.Let _ ->
       failwith "Let in - Students! this is your job!"
     | S.IfThenElse _ ->
