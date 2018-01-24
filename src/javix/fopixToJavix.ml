@@ -111,8 +111,12 @@ let rec translate p env : T.t * environment =
 
   and translate_expr env = function
     | S.Num i -> None, T.Bipush(i)
-    | S.FunName _ ->
-      failwith "FunName - Students! this is your job!"
+    | S.FunName fn ->
+      let _ = { nextvar = env.nextvar; variables = env.variables;
+                   function_labels = (fn, T.Label(fn))::env.function_labels;
+                   function_formals = env.function_formals} in
+                   None, T.Comment(";what should I put?")
+      (*failwith "FunName - Students! this is your job!"*)
     | S.Var _ ->
       failwith "Var - Students! this is your job!"
     | S.Let _ ->
