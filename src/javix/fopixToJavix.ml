@@ -61,6 +61,15 @@ let bind_variable env x =
 
 let clear_all_variables env = {env with variables = []; nextvar = 0}
 
+let find_variable env v =
+  let rec aux_find_variable l v =
+    match l with
+    | [] -> None
+    | (fv, jv)::t ->
+      if fv = v then Some(jv)
+      else aux_find_variable t v
+  in aux_find_variable env.variables v
+
 (** For return addresses (or later higher-order functions),
     we encode some labels as numbers. These numbers could then
     be placed in the stack, and will be used in a final tableswitch
@@ -104,9 +113,9 @@ let rec translate p env : T.t * environment =
     | S.DefVal (i, e) ->
       (* Don't know what to do yet with it so I'm not using the vars for
          the moment... *)
-      let _, env = acc in
-      let _ = translate_expr env e in
-      acc
+      let o_code, env = acc in
+      let n_code = translate_expr env e in
+      o_code @ n_code, env
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
   (* I think I understood what you tried to to @Yves, and I think that
