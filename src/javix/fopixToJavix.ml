@@ -132,8 +132,11 @@ let rec translate p env : T.t * environment =
       failwith "Let in - Students! this is your job!"
     | S.IfThenElse (cond, e1, e2) ->
       failwith "If then else - Students! this is your job!"
-    | S.BinOp _ ->
-      failwith "Binop - Students! this is your job!"
+    | S.BinOp(op, e1, e2) ->
+      let c1 = translate_expr env e1 in
+      let c2 = translate_expr env e2 in
+      c1 @ (translate_op op) @ c2
+      (*failwith "Binop - Students! this is your job!"*)
     | S.BlockNew _ ->
       failwith "BlockNew - Students! this is your job!"
     | S.BlockGet _ ->
@@ -142,6 +145,22 @@ let rec translate p env : T.t * environment =
       failwith "BlockSet - Students! this is your job!"
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
+
+    and translate_op op  = [(None, T.Binop(translate_op_aux op))]
+    and translate_op_aux =
+      function
+      | S.Add -> T.Add
+      | S.Sub -> T.Sub
+      | S.Mul -> T.Mul
+      | S.Div -> T.Div
+      | S.Mod -> T.Rem
+      | _ -> failwith "invalid operation"
+      (* not the same type: cmop *)
+      (*| S.Eq -> T.Eq
+      | S.Le -> T.Le
+      | S.Lt -> T.Lt
+      | S.Ge -> T.Ge
+      | S.Gt -> T.Gt*)
   in program env p
 
 (** Remarks:
