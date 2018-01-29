@@ -148,8 +148,10 @@ let rec translate p env : T.t * environment =
       let c2 = translate_expr env e2 in
       c1 @ (translate_op op) @ c2
       (*failwith "Binop - Students! this is your job!"*)
-    | S.BlockNew _ ->
-      failwith "BlockNew - Students! this is your job!"
+    | S.BlockNew e ->
+      (match e with
+      | S.Num n -> (None, T.Bipush(n))::(None, T.Anewarray)::[]
+      | _ -> failwith "Bad type of size")
     | S.BlockGet _ ->
       failwith "BlockGet - Students! this is your job!"
     | S.BlockSet _ ->
