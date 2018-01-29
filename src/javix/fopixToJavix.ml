@@ -136,7 +136,9 @@ let rec translate p env : T.t * environment =
                 function_labels = env.function_labels;
                 function_formals = env.function_formals} in
                 None, T.Comment(";Should I put 'T.Astore v'?")*)
-      failwith "Var - Students! this is your job!"
+      (match (find_variable env v) with
+      | Some(jv) -> (None, T.Aload(jv))::[]
+      | None -> failwith "No Javix variable binded to this Fopix var")
     | S.Let _ ->
       failwith "Let in - Students! this is your job!"
     | S.IfThenElse (cond, e1, e2) ->
