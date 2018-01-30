@@ -109,13 +109,11 @@ let rec translate p env : T.t * environment =
     let code, env = List.fold_left translate_definition acc defs
     in basic_program code, env
 
-  and translate_definition acc = function
+  and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
-      (* Don't know what to do yet with it so I'm not using the vars for
-         the moment... *)
-      let o_code, env = acc in
-      let n_code = translate_expr env e in
-      o_code @ n_code, env
+      let n_code  = translate_expr env e in
+      let _, nenv = bind_variable env i in
+      o_code @ n_code, nenv
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
   (* I think I understood what you tried to to @Yves, and I think that
@@ -146,7 +144,7 @@ let rec translate p env : T.t * environment =
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
       let c2 = translate_expr env e2 in (* Not very proper *)
-      c1 @ [(None, T.Unbox)] @ c2 @ [(None, T.Unbox)] @ (translate_op op)
+      c1 @ c2 @ (translate_op op)
       (*failwith "Binop - Students! this is your job!"*)
     | S.BlockNew e ->
       (match e with
