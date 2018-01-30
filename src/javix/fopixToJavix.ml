@@ -146,7 +146,7 @@ let rec translate p env : T.t * environment =
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
       let c2 = translate_expr env e2 in
-      c1 @ (translate_op op) @ c2
+      c1 @ c2 @ (translate_op op)
       (*failwith "Binop - Students! this is your job!"*)
     | S.BlockNew e ->
       (match e with
@@ -167,13 +167,7 @@ let rec translate p env : T.t * environment =
       | S.Mul -> T.Mul
       | S.Div -> T.Div
       | S.Mod -> T.Rem
-      | _ -> failwith "invalid operation"
-      (* not the same type: cmop *)
-      (*| S.Eq -> T.Eq
-      | S.Le -> T.Le
-      | S.Lt -> T.Lt
-      | S.Ge -> T.Ge
-      | S.Gt -> T.Gt*)
+      | _ -> failwith "Binop: invalid operation"
   in program env p
 
 (** Remarks:
