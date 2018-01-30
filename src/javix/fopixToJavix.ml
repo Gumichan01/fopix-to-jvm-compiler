@@ -103,10 +103,8 @@ let basic_program code =
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
-  (* TODO: Find a name more relevant than 'acc' *)
   let rec program env defs =
-    let acc = ([],env) in
-    let code, env = List.fold_left translate_definition acc defs
+    let code, env = List.fold_left translate_definition ([],env) defs
     in basic_program code, env
 
   and translate_definition (o_code, env) = function
@@ -143,7 +141,7 @@ let rec translate p env : T.t * environment =
       failwith "If then else - Students! this is your job!"
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
-      let c2 = translate_expr env e2 in (* Not very proper *)
+      let c2 = translate_expr env e2 in
       c1 @ c2 @ (translate_op op)
       (*failwith "Binop - Students! this is your job!"*)
     | S.BlockNew e ->
