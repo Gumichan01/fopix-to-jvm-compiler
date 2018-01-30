@@ -120,7 +120,7 @@ let rec translate p env : T.t * environment =
      Maybe I am wrong but we should ask the teacher for confirmation
   *)
   and translate_expr env = function
-    | S.Num i -> (None, T.Bipush(i))::(None, T.Box)::[]
+    | S.Num i -> (None, T.Bipush(i))::[]
     | S.FunName fn ->
       (*let _ = { nextvar = env.nextvar; variables = env.variables;
                    function_labels = (fn, T.Label(fn))::env.function_labels;

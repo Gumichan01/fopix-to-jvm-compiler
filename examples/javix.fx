@@ -5,11 +5,6 @@
 */
 
 val x = 10
-/*
-    @bug @fixme val y = 1 + 2
-    I have this exception
-    Failure("Incorrect stack head for Binop")
-*/
 val y = 1 + 2
 val z = x + y
 
