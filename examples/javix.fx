@@ -5,13 +5,12 @@
 */
 
 val x = 10
-val y = 1 + 2
 /*
-    @bug @fixme
-    This following line does not compile properly
+    @bug @fixme val y = 1 + 2
     I have this exception
-    Failure("No Javix variable binded to this Fopix var")
+    Failure("Incorrect stack head for Binop")
 */
+val y = 1 + 2
 val z = x + y
 
 /*
