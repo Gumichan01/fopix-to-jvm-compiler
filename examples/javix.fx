@@ -12,7 +12,7 @@ val y = 1 + 2
     I have this exception
     Failure("No Javix variable binded to this Fopix var")
 */
-/*val z = x + y*/
+val z = x + y
 
 /*
     @TODO
