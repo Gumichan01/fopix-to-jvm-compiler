@@ -6,12 +6,26 @@
 
 val x = 10
 val y = 1 + 2
-/* val z = x + y */ /* Does not work */
+/*
+    @bug @fixme
+    This following line does not compile properly
+    I have this exception
+    Failure("No Javix variable binded to this Fopix var")
+*/
+/*val z = x + y*/
 
-/* If then else */
+/*
+    @TODO
+    If then else
+*/
 /* val bt = if 1 = 1 then 1 else 2 */
 /* val bf = if 1 = 0 then 1 else 2 */
 
-/* Functions */
+/*
+    @TODO
+    Functions
+*/
 /* def f(x,y) = x + y */
 /* val a = f(1, 2) */
+
+/* + other instructions not compiled yet (see fopixToJavix.ml) */
