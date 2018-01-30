@@ -132,8 +132,10 @@ let rec translate p env : T.t * environment =
       (match (find_variable env v) with
       | Some(jv) -> (None, T.Aload(jv))::(None, T.Unbox)::[]
       | None -> failwith "No Javix variable binded to this Fopix var")
-    | S.Let _ ->
-      failwith "Let in - Students! this is your job!"
+
+    | S.Let (i, e1, e2) ->
+      let code, nenv = translate_definition ([], env) (S.DefVal(i,e1)) in
+      code @ (translate_expr nenv e2)
 
     | S.IfThenElse (cond, e1, e2) ->
       failwith "If then else - Students! this is your job!"
