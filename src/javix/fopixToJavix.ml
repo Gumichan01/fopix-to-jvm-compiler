@@ -105,7 +105,7 @@ let basic_program code =
 let rec translate p env : T.t * environment =
   let rec program env defs =
     let code, env = List.fold_left translate_definition ([],env) defs
-    in basic_program code, env
+    in basic_program (code @ [(None, T.Ireturn)]), env
 
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
@@ -127,31 +127,32 @@ let rec translate p env : T.t * environment =
                    function_formals = env.function_formals} in
                    None, T.Comment(";what should I put?")*)
       failwith "FunName - Students! this is your job!"
+
     | S.Var v ->
-      (*let _ = { nextvar = env.nextvar; variables = (v, T.Var(0))::env.variables;
-                function_labels = env.function_labels;
-                function_formals = env.function_formals} in
-                None, T.Comment(";Should I put 'T.Astore v'?")*)
       (match (find_variable env v) with
       | Some(jv) -> (None, T.Aload(jv))::(None, T.Unbox)::[]
       | None -> failwith "No Javix variable binded to this Fopix var")
     | S.Let _ ->
       failwith "Let in - Students! this is your job!"
+
     | S.IfThenElse (cond, e1, e2) ->
       failwith "If then else - Students! this is your job!"
+
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
       let c2 = translate_expr env e2 in
       c1 @ c2 @ (translate_op op)
-      (*failwith "Binop - Students! this is your job!"*)
+
     | S.BlockNew e ->
       (match e with
       | S.Num n -> (None, T.Bipush(n))::(None, T.Anewarray)::[]
       | _ -> failwith "Bad type of size")
     | S.BlockGet _ ->
       failwith "BlockGet - Students! this is your job!"
+
     | S.BlockSet _ ->
       failwith "BlockSet - Students! this is your job!"
+
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
