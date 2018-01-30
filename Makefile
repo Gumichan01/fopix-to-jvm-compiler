@@ -72,3 +72,6 @@ doc: byte
 
 run: all-generic
 	@ rlwrap ./flap -s fopix --interactive -r true
+
+jflap: all-generic
+	@ ./jflap.sh
