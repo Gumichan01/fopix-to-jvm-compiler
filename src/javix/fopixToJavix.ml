@@ -145,8 +145,8 @@ let rec translate p env : T.t * environment =
       failwith "If then else - Students! this is your job!"
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
-      let c2 = translate_expr env e2 in
-      c1 @ c2 @ (translate_op op)
+      let c2 = translate_expr env e2 in (* Not very proper *)
+      c1 @ [(None, T.Unbox)] @ c2 @ [(None, T.Unbox)] @ (translate_op op)
       (*failwith "Binop - Students! this is your job!"*)
     | S.BlockNew e ->
       (match e with
