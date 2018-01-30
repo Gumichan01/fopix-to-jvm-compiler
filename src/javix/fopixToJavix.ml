@@ -110,15 +110,15 @@ let rec translate p env : T.t * environment =
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
       let n_code  = translate_expr env e in
-      let _, nenv = bind_variable env i in
-      o_code @ n_code, nenv
+      let v, nenv = bind_variable env i in
+      (*
+         Each time you define a variable, take the integer bound to it at
+         the top of the stack, box it, and store it in a variable indexed by v
+      *)
+      let astore = ((None, T.Box) :: (None, T.Astore(v)) :: []) in
+      o_code @ n_code @ astore, nenv
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
-  (* I think I understood what you tried to to @Yves, and I think that
-     translate_expr has this type : environment-> S -> labelled_instruction * environment
-
-     Maybe I am wrong but we should ask the teacher for confirmation
-  *)
   and translate_expr env = function
     | S.Num i -> (None, T.Bipush(i))::[]
     | S.FunName fn ->
@@ -133,7 +133,7 @@ let rec translate p env : T.t * environment =
                 function_formals = env.function_formals} in
                 None, T.Comment(";Should I put 'T.Astore v'?")*)
       (match (find_variable env v) with
-      | Some(jv) -> (None, T.Aload(jv))::[]
+      | Some(jv) -> (None, T.Aload(jv))::(None, T.Unbox)::[]
       | None -> failwith "No Javix variable binded to this Fopix var")
     | S.Let _ ->
       failwith "Let in - Students! this is your job!"
