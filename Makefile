@@ -61,11 +61,8 @@ byte-debug:
 clean:
 	@ $(OCAMLBUILD) -clean
 	find . -name '*~' -exec rm '{}' \;
-	rm -fr *~ $(TARGET) $(OTARGET) $(BTARGET)
+	rm -fr *~ $(TARGET) $(OTARGET) $(BTARGET) $(TARGET).odocl $(TARGET).docdir
 
 doc: byte
+	find src -name \*.ml | cut -d"." -f1 > $(TARGET).odocl
 	$(OCAMLBUILD) $(TARGET).docdir/index.html
-	mkdir -p doc/html
-	rm -f $(TARGET).docdir/style.css 2> /dev/null
-	mv $(TARGET).docdir/* doc/html
-	rm $(TARGET).docdir
