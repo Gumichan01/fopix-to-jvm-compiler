@@ -155,21 +155,24 @@ let rec translate p env : T.t * environment =
       let c2 = translate_expr env e2 in
       c1 @ c2 @ (translate_op op)
 
+    (* Currently, it isn't working properly because Anewarray pushes
+       an address and DefVal boxes it. Javix doesn't seem to like it ! *)
+
     | S.BlockNew e ->
       let b = translate_expr env e in
-      b @ (None, T.Anewarray)::[] 
+      b @ (None, T.Comment "Creating block")::(None, T.Anewarray)::[] 
 
     | S.BlockGet (e1,e2) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
-      b @ i @ (None, T.AAload)::[]
+      b @ i @ (None, T.Comment "Getting from block")::(None, T.AAload)::[]
 
     | S.BlockSet (e1,e2,e3) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
       let v = translate_expr env e3 in
       (* Adding a T.Bipush(0) as a return value for the S.DefVal *)
-      b @ i @ v @ (None, T.AAstore)::(None, T.Bipush(0))::[]
+      b @ i @ v @ (None, T.Comment "Setting block")::(None, T.AAstore)::(None, T.Bipush(0))::[]
 
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
