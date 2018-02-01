@@ -105,7 +105,11 @@ let basic_program code =
 let rec translate p env : T.t * environment =
   let rec program env defs =
     let code, env = List.fold_left translate_definition ([],env) defs
-    in basic_program (code @ [(None, T.Ireturn)]), env
+    in basic_program (code @ (translate_exit env)), env
+
+  and translate_exit env =
+    let v = T.Var(env.nextvar -1) in
+    (None, T.Aload(v)) :: (None, T.Unbox) :: (None, T.Ireturn) :: []
 
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
