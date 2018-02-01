@@ -156,14 +156,15 @@ let rec translate p env : T.t * environment =
       c1 @ c2 @ (translate_op op)
 
     | S.BlockNew e ->
-      (match e with
-      | S.Num n -> (None, T.Bipush(n))::(None, T.Anewarray)::[]
-      | _ -> failwith "Bad type of size")
-    | S.BlockGet _ ->
+      let b = translate_expr env e in
+      b @ (None, T.Anewarray)::[] 
+    
+    | S.BlockGet (e1,e2) ->
       failwith "BlockGet - Students! this is your job!"
 
     | S.BlockSet _ ->
       failwith "BlockSet - Students! this is your job!"
+        (* Do not forget to add a Bipush 0 in order to return a val ! *)
 
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
