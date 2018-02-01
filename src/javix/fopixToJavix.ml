@@ -107,9 +107,15 @@ let rec translate p env : T.t * environment =
     let code, env = List.fold_left translate_definition ([],env) defs
     in basic_program (code @ (translate_exit env)), env
 
+  (* proper exit in javix *)
   and translate_exit env =
-    let v = T.Var(env.nextvar -1) in
-    (None, T.Aload(v)) :: (None, T.Unbox) :: (None, T.Ireturn) :: []
+    let v = T.Var(env.nextvar -1) in (load_var v) @ ((None, T.Ireturn) :: [])
+
+  (* store variable in javix *)
+  and store_var v = (None, T.Box) :: (None, T.Astore(v)) :: []
+
+  (* load variable in javix *)
+  and load_var v = (None, T.Aload(v)) :: (None, T.Unbox) :: []
 
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
@@ -119,8 +125,8 @@ let rec translate p env : T.t * environment =
          Each time you define a variable, take the integer bound to it at
          the top of the stack, box it, and store it in a variable indexed by v
       *)
-      let astore = ((None, T.Box) :: (None, T.Astore(v)) :: []) in
-      o_code @ n_code @ astore, nenv
+      let vstore = store_var v in
+      o_code @ n_code @ vstore, nenv
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
   and translate_expr env = function
@@ -134,7 +140,7 @@ let rec translate p env : T.t * environment =
 
     | S.Var v ->
       (match (find_variable env v) with
-      | Some(jv) -> (None, T.Aload(jv))::(None, T.Unbox)::[]
+      | Some(jv) -> load_var jv
       | None -> failwith "No Javix variable binded to this Fopix var")
 
     | S.Let (i, e1, e2) ->
@@ -163,6 +169,7 @@ let rec translate p env : T.t * environment =
       failwith "FunCall - Students! this is your job!"
 
     and translate_op op  = [(None, T.Binop(translate_op_aux op))]
+
     and translate_op_aux =
       function
       | S.Add -> T.Add
