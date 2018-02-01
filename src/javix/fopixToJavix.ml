@@ -158,9 +158,11 @@ let rec translate p env : T.t * environment =
     | S.BlockNew e ->
       let b = translate_expr env e in
       b @ (None, T.Anewarray)::[] 
-    
+
     | S.BlockGet (e1,e2) ->
-      failwith "BlockGet - Students! this is your job!"
+      let b = translate_expr env e1 in
+      let i = translate_expr env e2 in
+      b @ i @ (None, T.AAload)::[]
 
     | S.BlockSet _ ->
       failwith "BlockSet - Students! this is your job!"
