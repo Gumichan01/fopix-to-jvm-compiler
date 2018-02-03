@@ -66,6 +66,7 @@ let string_of_instr = function
   | Comment msg -> "Comment "^msg
   | Tableswitch _ -> "Switch"
   | Checkarray -> "Checkarray"
+  | Print _ -> "Print"
 
 let rec string_of_stack i l =
   if i=0 then "..."
@@ -179,6 +180,7 @@ and interp r =
      (match a with
       | VArray _ -> push a r; next r
       | _ -> failwith "Checkarray on a non-VArray")
+  | Print s -> Printf.printf "%s\n" s; 0
 
 and next r = r.pc <- r.pc + 1; interp r
 
