@@ -180,7 +180,7 @@ and interp r =
      (match a with
       | VArray _ -> push a r; next r
       | _ -> failwith "Checkarray on a non-VArray")
-  | Print s -> Printf.printf "%s\n" s; 0
+  | Print s -> Printf.printf "%s" s; push (VInt 0) r; next r
 
 and next r = r.pc <- r.pc + 1; interp r
 
