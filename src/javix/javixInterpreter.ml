@@ -66,7 +66,7 @@ let string_of_instr = function
   | Comment msg -> "Comment "^msg
   | Tableswitch _ -> "Switch"
   | Checkarray -> "Checkarray"
-  | Print _ -> "Print"
+  | Print s -> "Print "^s
 
 let rec string_of_stack i l =
   if i=0 then "..."
