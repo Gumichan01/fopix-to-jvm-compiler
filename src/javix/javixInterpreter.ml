@@ -66,7 +66,15 @@ let string_of_instr = function
   | Comment msg -> "Comment "^msg
   | Tableswitch _ -> "Switch"
   | Checkarray -> "Checkarray"
-  | Print s -> "Print "^s
+  | Print s ->
+     let p = ref "" in
+     String.iter (fun c -> match c with
+                           | '\\' -> p := !p ^ "\\\\"
+                           | '\n' -> p := !p ^ "\\n"
+                           | '\t' -> p := !p ^ "\\t"
+                           | '"'  -> p := !p ^ "\\\""
+                           | _    -> p := !p ^ (String.make 1 c)) s;
+     "Print \"" ^ !p ^ "\""
 
 let rec string_of_stack i l =
   if i=0 then "..."
