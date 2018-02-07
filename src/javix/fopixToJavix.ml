@@ -153,7 +153,7 @@ let rec translate p env : T.t * environment =
     | S.BinOp(op, e1, e2) ->
       let c1 = translate_expr env e1 in
       let c2 = translate_expr env e2 in
-      c1 @ c2 @ (translate_op op)
+      c1 @ c2 @ (translate_op env op)
 
     (* Currently, it isn't working properly because Anewarray pushes
        an address and DefVal boxes it. Javix doesn't seem to like it ! *)
@@ -177,10 +177,10 @@ let rec translate p env : T.t * environment =
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
-    and translate_op op  = (*[(None, T.Binop(translate_op_aux op))]*)
+    and translate_op env op  = (*[(None, T.Binop(translate_op_aux op))]*)
       match (translate_arith op) with
       | Some(v) -> [(None, T.Binop(v))]
-      | None -> failwith "Binop: invalid operation" (*[(None, translate_comp op)]*)
+      | None -> translate_comp env op (*failwith "Binop: invalid operation"*) (*[(None, translate_comp op)]*)
 
     and translate_arith =
       function
@@ -191,14 +191,20 @@ let rec translate p env : T.t * environment =
       | S.Mod -> Some(T.Rem)
       | _ -> None
 
-      (*and translate_comp =
-        function
+      and translate_comp env cmp =
+        let ie = translate_cmp_aux cmp in
+        (None, T.If_icmp(ie, T.Label("true_1"))) :: []
+
+      and translate_cmp_aux =
+      function
         | S.Eq -> T.Eq
         | S.Le -> T.Le
         | S.Lt -> T.Lt
         | S.Ge -> T.Ge
         | S.Gt -> T.Gt
-        | _ -> failwith "Binop: invalid operation"*)
+        | _ -> failwith "Binop: invalid operation"
+
+
   in program env p
 
 (** Remarks:
