@@ -20,7 +20,7 @@ type environment = {
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
   function_formals : (S.function_identifier * S.formals) list;
-  mutable box_next_value: bool ref;
+  mutable box_nextval: bool ref;
 }
 
 (** Initially, the environment is empty. *)
@@ -29,7 +29,7 @@ let initial_environment () = {
   variables        = [];
   function_labels  = [];
   function_formals = [];
-  box_next_value   = ref true;
+  box_nextval      = ref true;
 }
 
 (** [lookup_function_label f env] returns the label of [f] in [env]. *)
@@ -74,7 +74,7 @@ let find_variable env v =
   in aux_find_variable env.variables v
 
 let env_box_flag env b =
-  env.box_next_value <- ref b
+  env.box_nextval <- ref b
 
 (** For return addresses (or later higher-order functions),
     we encode some labels as numbers. These numbers could then
@@ -134,7 +134,7 @@ let rec translate p env : T.t * environment =
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
       let n_code  = translate_expr env e in
-      let v, b, nenv = bind_variable env i !(env.box_next_value) in
+      let v, b, nenv = bind_variable env i !(env.box_nextval) in
       let _ = env_box_flag nenv true in
       (*
          Each time you define a variable, take the integer bound to it at
@@ -176,19 +176,20 @@ let rec translate p env : T.t * environment =
     | S.BlockNew e ->
       let b = translate_expr env e in
       let _ = env_box_flag env false in
-      b @ (None, T.Comment "Creating block")::(None, T.Anewarray)::[]
+      b @ (None, T.Comment "Creating block") :: (None, T.Anewarray) :: []
 
     | S.BlockGet (e1,e2) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
-      b @ i @ (None, T.Comment "Getting from block")::(None, T.AAload)::[]
+      b @ i @ (None, T.Comment "Getting from block") :: (None, T.AAload) :: []
 
     | S.BlockSet (e1,e2,e3) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
       let v = translate_expr env e3 in
       (* Adding a T.Bipush(0) as a return value for the S.DefVal *)
-      b @ i @ v @ (None, T.Comment "Setting block")::(None, T.AAstore)::(None, T.Bipush(0))::[]
+      b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.AAstore) ::
+      (None, T.Bipush(0)) :: []
 
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
