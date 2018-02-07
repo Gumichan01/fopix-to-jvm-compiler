@@ -196,7 +196,9 @@ let rec translate p env : T.t * environment =
       and translate_comp env cmp =
         let ie = translate_cmp_aux cmp in
         (None, T.If_icmp(ie, T.Label("true_1"))) :: (translate_bool false) :: []
-
+        (*
+          I should put this goto at the end of the instruction
+         (None, T.Goto(Label("endif_1"))) :: *)
       and translate_cmp_aux =
       function
         | S.Eq -> T.Eq
