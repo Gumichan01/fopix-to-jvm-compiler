@@ -12,8 +12,11 @@ val z = x + y
     @TODO
     If then else
 */
-/* val bt = if 1 = 1 then 1 else 2 */
-/* val bf = if 1 = 0 then 1 else 2 */
+val bt = if 1 = 1 then 1 else 2
+val bf = if 1 = 0 then 1 else 2
+
+def fact(x) = if x = 0 then 1 else x * fact(x-1)
+val res = fact(10)
 
 /*
     @TODO
