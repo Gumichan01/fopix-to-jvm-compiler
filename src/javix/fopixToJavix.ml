@@ -73,8 +73,8 @@ let find_variable env v =
       else aux_find_variable t v
   in aux_find_variable env.variables v
 
-let env_box_flag env b =
-  env.box_nextval <- ref b
+let env_set_flag env b =
+  env.box_nextval := b
 
 (** For return addresses (or later higher-order functions),
     we encode some labels as numbers. These numbers could then
@@ -135,7 +135,7 @@ let rec translate p env : T.t * environment =
     | S.DefVal (i, e) ->
       let n_code  = translate_expr env e in
       let v, b, nenv = bind_variable env i !(env.box_nextval) in
-      let _ = env_box_flag nenv true in
+      let _ = env_set_flag nenv true in
       (*
          Each time you define a variable, take the integer bound to it at
          the top of the stack, box it, and store it in a variable indexed by v
@@ -175,7 +175,7 @@ let rec translate p env : T.t * environment =
 
     | S.BlockNew e ->
       let b = translate_expr env e in
-      let _ = env_box_flag env false in
+      let _ = env_set_flag env false in
       b @ (None, T.Comment "Creating block") :: (None, T.Anewarray) :: []
 
     | S.BlockGet (e1,e2) ->
