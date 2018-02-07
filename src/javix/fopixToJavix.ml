@@ -160,7 +160,7 @@ let rec translate p env : T.t * environment =
 
     | S.BlockNew e ->
       let b = translate_expr env e in
-      b @ (None, T.Comment "Creating block")::(None, T.Anewarray)::[] 
+      b @ (None, T.Comment "Creating block")::(None, T.Anewarray)::[]
 
     | S.BlockGet (e1,e2) ->
       let b = translate_expr env e1 in
@@ -177,16 +177,28 @@ let rec translate p env : T.t * environment =
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
-    and translate_op op  = [(None, T.Binop(translate_op_aux op))]
+    and translate_op op  = (*[(None, T.Binop(translate_op_aux op))]*)
+      match (translate_arith op) with
+      | Some(v) -> [(None, T.Binop(v))]
+      | None -> failwith "Binop: invalid operation" (*[(None, translate_comp op)]*)
 
-    and translate_op_aux =
+    and translate_arith =
       function
-      | S.Add -> T.Add
-      | S.Sub -> T.Sub
-      | S.Mul -> T.Mul
-      | S.Div -> T.Div
-      | S.Mod -> T.Rem
-      | _ -> failwith "Binop: invalid operation"
+      | S.Add -> Some(T.Add)
+      | S.Sub -> Some(T.Sub)
+      | S.Mul -> Some(T.Mul)
+      | S.Div -> Some(T.Div)
+      | S.Mod -> Some(T.Rem)
+      | _ -> None
+
+      (*and translate_comp =
+        function
+        | S.Eq -> T.Eq
+        | S.Le -> T.Le
+        | S.Lt -> T.Lt
+        | S.Ge -> T.Ge
+        | S.Gt -> T.Gt
+        | _ -> failwith "Binop: invalid operation"*)
   in program env p
 
 (** Remarks:
