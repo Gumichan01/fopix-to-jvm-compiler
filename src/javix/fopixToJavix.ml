@@ -111,6 +111,8 @@ let rec translate p env : T.t * environment =
   and translate_exit env =
     let v = T.Var(env.nextvar -1) in (load_var v) @ ((None, T.Ireturn) :: [])
 
+  and translate_bool b = (None, T.Bipush(match b with true -> 1 | false -> 0))
+
   (* store variable in javix *)
   and store_var v = (None, T.Box) :: (None, T.Astore(v)) :: []
 
@@ -193,7 +195,7 @@ let rec translate p env : T.t * environment =
 
       and translate_comp env cmp =
         let ie = translate_cmp_aux cmp in
-        (None, T.If_icmp(ie, T.Label("true_1"))) :: []
+        (None, T.If_icmp(ie, T.Label("true_1"))) :: (translate_bool false) :: []
 
       and translate_cmp_aux =
       function
