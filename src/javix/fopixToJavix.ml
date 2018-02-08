@@ -105,6 +105,19 @@ let fresh_label: string -> T.label =
   let r = ref 0 in
   (fun str -> incr r; T.Label(str ^ string_of_int !r))
 
+(*
+  Generate labels for if-then-else instruction
+  Creates two fresh labels, then<n>, endif<n> n ∈ [ 0 , +∞ [
+
+*)
+let fresh_iflabel: unit -> T.label * T.label =
+  let r = ref 0 in
+  (fun _ ->
+    incr r;
+    let rr = !r in
+    ( T.Label("then" ^ "<" ^ string_of_int rr ^ ">"),
+      T.Label("endif" ^ "<" ^ string_of_int rr ^ ">") )
+  )
 
 let basic_program code =
   { T.classname = "Fopix";
@@ -176,14 +189,12 @@ let rec translate p env : T.t * environment =
       code @ (translate_expr nenv e2)
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
-      let left   = translate_expr env a1 in
-      let right  = translate_expr env a2 in
+      let terms  = translate_expr env a1 @ translate_expr env a2 in
       let ethen  = translate_expr env e1 in
       let eelse  = translate_expr env e2 in
-      let thlab  = fresh_label "then"    in
-      let endlab = fresh_label "endif"   in
+      let thlab, endlab = fresh_iflabel () in
       let ie     = translate_cmp op in
-      left @ right @ [(None, T.If_icmp(ie, thlab))] @ eelse @
+      terms @ [(None, T.If_icmp(ie, thlab))] @ eelse @
       [(None, T.Goto(endlab))] @ [Some(thlab), T.Comment("then")] @ ethen @
       [Some(endlab), T.Comment("endif")] @ []
       (*failwith "Luxon: this is your job!"*)
