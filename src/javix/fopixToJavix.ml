@@ -133,17 +133,21 @@ let rec translate p env : T.t * environment =
     else
       (None, T.Aload(v)) :: []
 
+  (*
+     Each time you define a variable, take the integer bound to it at
+     the top of the stack, box it, and store it in a variable indexed by v
+  *)
+  and def_val (o_code, env) (i, e) =
+    let n_code = translate_expr env e in
+    let v, b, nenv = bind_variable env i !(env.box_nextval) in
+    let _ = env_set_flag nenv true in
+    let vstore = store_var v b in
+    o_code @ n_code @ vstore, nenv
+
+
   and translate_definition (o_code, env) = function
-    | S.DefVal (i, e) ->
-      let n_code  = translate_expr env e in
-      let v, b, nenv = bind_variable env i !(env.box_nextval) in
-      let _ = env_set_flag nenv true in
-      (*
-         Each time you define a variable, take the integer bound to it at
-         the top of the stack, box it, and store it in a variable indexed by v
-      *)
-      let vstore = store_var v b in
-      o_code @ n_code @ vstore, nenv
+    | S.DefVal (i, e) -> def_val (o_code, env) (i, e)
+
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
   and translate_expr env = function
