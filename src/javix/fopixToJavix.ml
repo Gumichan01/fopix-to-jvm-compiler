@@ -193,11 +193,10 @@ let rec translate p env : T.t * environment =
       let ethen  = translate_expr env e1 in
       let eelse  = translate_expr env e2 in
       let thlab, endlab = fresh_iflabel () in
-      let ie     = translate_cmp op in
+      let ie = translate_cmp op in
       terms @ [(None, T.If_icmp(ie, thlab))] @ eelse @
-      [(None, T.Goto(endlab))] @ [Some(thlab), T.Comment("then")] @ ethen @
-      [Some(endlab), T.Comment("endif")] @ []
-      (*failwith "Luxon: this is your job!"*)
+      [(None, T.Goto(endlab))] @ label_if thlab ethen @
+      [Some(endlab), T.Comment("endif")]
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
       failwith "Luxon: this is your job!"
@@ -271,6 +270,9 @@ let rec translate p env : T.t * environment =
     and generate_comp env (op, e1, e2) =
       let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
       translate_expr env if_comp
+
+    and label_if labelif ((None, i)::q) =
+      (Some(labelif), i)::q
 
     and translate_cond env =
       function
