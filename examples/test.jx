@@ -1,6 +1,0 @@
-bipush 2
-bipush 3
-imul
-bipush 7
-imul
-ireturn
