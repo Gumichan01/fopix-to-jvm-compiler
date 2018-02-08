@@ -190,13 +190,8 @@ let rec translate p env : T.t * environment =
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
       let terms  = translate_expr env a1 @ translate_expr env a2 in
-      let ethen  = translate_expr env e1 in
-      let eelse  = translate_expr env e2 in
-      let thlab, endlab = fresh_iflabel () in
-      let ie = translate_cmp op in
-      terms @ [(None, T.If_icmp(ie, thlab))] @ eelse @
-      [(None, T.Goto(endlab))] @ label_if thlab ethen @
-      [Some(endlab), T.Comment("endif")]
+      translate_if env (translate_cmp op) terms e1 e2
+
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
       failwith "Luxon: this is your job!"
@@ -250,6 +245,8 @@ let rec translate p env : T.t * environment =
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
+    (* Functions related to Binary operations *)
+
     (* Check if an operator is arithmetic - '+', '-', '*', '/', ... *)
     and is_arith =
       function
@@ -257,6 +254,11 @@ let rec translate p env : T.t * environment =
       | _ -> false
 
     (*
+      In the following functions:
+      - generate_arith
+      - translate_op
+      - translate_arith
+
       pre-condition: op is an arithmetic operator
     *)
     and generate_arith env (op, e1, e2) =
@@ -265,24 +267,8 @@ let rec translate p env : T.t * environment =
       c1 @ c2 @ (translate_op env op)
 
     (*
-      pre-condition: op is not an arithmetic operator
+      pre-condition: op is an arithmetic operator
     *)
-    and generate_comp env (op, e1, e2) =
-      let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
-      translate_expr env if_comp
-
-    and label_if labelif ((None, i)::q) =
-      (Some(labelif), i)::q
-
-    and translate_cond env =
-      function
-      | S.BinOp(op, e1, e2) as bin ->
-        if is_arith op
-        then (translate_expr env bin), None
-        else ((translate_expr env e1) @ (translate_expr env e2)), Some(op)
-      | _ as o -> translate_expr env o , None
-
-
     and translate_op env op =
       match (translate_arith op) with
       | Some(v) -> [(None, T.Binop(v))]
@@ -297,23 +283,38 @@ let rec translate p env : T.t * environment =
       | S.Mod -> Some(T.Rem)
       | _ -> None
 
-      (*and translate_comp env cmp = failwith "TODO luxon"*)
-        (*let ie = translate_cmp_aux cmp in
-        let thlab = fresh_label "then" in
-        let endlab = fresh_label "endif" in!
-        (None, T.If_icmp(ie, thlab)) :: (translate_bool None false) ::
-        (None, T.Goto(endlab)) :: (translate_bool (Some(thlab)) true) :: (Some(endlab),) []*)
-        (*
-          I should put this goto at the end of the instruction
-         (None, T.Goto(Label("endif_1"))) :: *)
-      and translate_cmp =
-      function
-        | S.Eq -> T.Eq
-        | S.Le -> T.Le
-        | S.Lt -> T.Lt
-        | S.Ge -> T.Ge
-        | S.Gt -> T.Gt
-        | _ -> failwith "Binop: invalid operation"
+    (*
+      In the following functions:
+      - generate_comp
+      - translate_cmp
+
+      pre-condition: op is a comparison operator
+    *)
+    and generate_comp env (op, e1, e2) =
+      let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
+      translate_expr env if_comp
+
+    (* Functions related to IfThenElse*)
+
+    and translate_if env ifcomp terms e1 e2 =
+      let ethen  = translate_expr env e1 in
+      let eelse  = translate_expr env e2 in
+      let thlab, endlab = fresh_iflabel () in
+      terms @ [(None, T.If_icmp(ifcomp, thlab))] @ eelse @
+      [(None, T.Goto(endlab))] @ label_if thlab ethen @
+      [Some(endlab), T.Comment("endif")]
+
+    and label_if labelif ((None, i)::q) =
+      (Some(labelif), i)::q
+
+    and translate_cmp =
+     function
+     | S.Eq -> T.Eq
+     | S.Le -> T.Le
+     | S.Lt -> T.Lt
+     | S.Ge -> T.Ge
+     | S.Gt -> T.Gt
+     | _ -> failwith "Binop: invalid operation"
 
 
   in program env p
