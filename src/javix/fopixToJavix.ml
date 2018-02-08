@@ -100,6 +100,12 @@ module Labels :
    let all_encodings () = !allcodes
  end
 
+(* Create a new fresh label *)
+let fresh_label: string -> T.label =
+  let r = ref 0 in
+  (fun str -> incr r; T.Label(str ^ string_of_int !r))
+
+
 let basic_program code =
   { T.classname = "Fopix";
     T.code = code;
