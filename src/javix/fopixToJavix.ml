@@ -123,7 +123,8 @@ let rec translate p env : T.t * environment =
   and translate_exit env =
     let v = T.Var(env.nextvar -1) in (load_var v true) @ ((None, T.Ireturn) :: [])
 
-  and translate_bool b = (None, T.Bipush(match b with true -> 1 | false -> 0))
+  and translate_bool loption b =
+  (loption, T.Bipush(match b with true -> 1 | false -> 0))
 
   (* store variable in javix *)
   and store_var v b =
@@ -178,9 +179,9 @@ let rec translate p env : T.t * environment =
       failwith "If then else - Students! this is your job!"
 
     | S.BinOp(op, e1, e2) ->
-      let c1 = translate_expr env e1 in
-      let c2 = translate_expr env e2 in
-      c1 @ c2 @ (translate_op env op)
+      if is_arith op
+      then generate_arith env (op, e1, e2)
+      else generate_comp env (op, e1, e2)
 
     (* Currently, it isn't working properly because Anewarray pushes
        an address and DefVal boxes it. Javix doesn't seem to like it ! *)
@@ -206,7 +207,28 @@ let rec translate p env : T.t * environment =
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
-    and translate_op env op  = (*[(None, T.Binop(translate_op_aux op))]*)
+    (* Check if an operator is arithmetic - '+', '-', '*', '/', ... *)
+    and is_arith =
+      function
+      | S.Add | S.Sub | S.Mul | S.Div | S.Mod -> true
+      | _ -> false
+
+    (*
+      pre-condition: op is an arithmetic operator
+    *)
+    and generate_arith env (op, e1, e2) =
+      let c1 = translate_expr env e1 in
+      let c2 = translate_expr env e2 in
+      c1 @ c2 @ (translate_op env op)
+
+    (*
+      pre-condition: op is an arithmetic operator
+    *)
+    and generate_comp env (op, e1, e2) =
+      let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
+      translate_expr env if_comp
+
+    and translate_op env op  =
       match (translate_arith op) with
       | Some(v) -> [(None, T.Binop(v))]
       | None -> translate_comp env op (*failwith "Binop: invalid operation"*) (*[(None, translate_comp op)]*)
@@ -220,9 +242,12 @@ let rec translate p env : T.t * environment =
       | S.Mod -> Some(T.Rem)
       | _ -> None
 
-      and translate_comp env cmp =
-        let ie = translate_cmp_aux cmp in
-        (None, T.If_icmp(ie, T.Label("true_1"))) :: (translate_bool false) :: []
+      and translate_comp env cmp = failwith "TODO luxon"
+        (*let ie = translate_cmp_aux cmp in
+        let thlab = fresh_label "then" in
+        let endlab = fresh_label "endif" in
+        (None, T.If_icmp(ie, thlab)) :: (translate_bool None false) ::
+        (None, T.Goto(endlab)) :: (translate_bool (Some(thlab)) true) :: (Some(endlab),) []*)
         (*
           I should put this goto at the end of the instruction
          (None, T.Goto(Label("endif_1"))) :: *)
