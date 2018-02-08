@@ -189,12 +189,12 @@ let rec translate p env : T.t * environment =
       let terms  = translate_expr env a1 @ translate_expr env a2 in
       translate_if env (translate_cmp op) terms e1 e2
 
-
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
-      failwith "Luxon: this is your job!"
+      let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
+      translate_expr env (S.IfThenElse (bcomp, e1, e2))
 
     | S.IfThenElse (cond, e1, e2) ->
-      failwith "Luxon: this is your job!"
+      failwith "Luxon: cond this is your job!"
 
     (*| S.IfThenElse (Binop, e1, e2) ->
       let ci, opopt = translate_cond env cond in
