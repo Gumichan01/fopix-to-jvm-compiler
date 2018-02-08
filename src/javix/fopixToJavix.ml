@@ -73,6 +73,18 @@ let find_variable env v =
       else aux_find_variable t v
   in aux_find_variable env.variables v
 
+(** Functions *)
+
+let bind_function env f l =
+  { env with
+    function_labels = (f,l) :: env.function_labels }
+
+let bind_formals env func fo =
+  { env with
+    function_formals = (func,fo) :: env.function_formals }
+
+(** Environment *)
+
 let env_set_flag env b =
   env.box_nextval := b
 
@@ -133,6 +145,14 @@ let rec translate p env : T.t * environment =
     else
       (None, T.Aload(v)) :: []
 
+  (* insert Javix function *)
+  and insert_fun label fi code =
+    (Some(label),T.Comment("Starting " ^ fi ^ " function")) :: code
+
+  and translate_definition (o_code, env) = function
+    | S.DefVal (i, e) -> def_val (o_code, env) (i, e)
+    | S.DefFun (fi, fo, e) -> def_fun fi fo e env
+
   (*
      Each time you define a variable, take the integer bound to it at
      the top of the stack, box it, and store it in a variable indexed by v
@@ -144,11 +164,12 @@ let rec translate p env : T.t * environment =
     let vstore = store_var v b in
     o_code @ n_code @ vstore, nenv
 
-
-  and translate_definition (o_code, env) = function
-    | S.DefVal (i, e) -> def_val (o_code, env) (i, e)
-
-    | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
+  and def_fun fi fo e env =
+    let n_code = translate_expr env e in
+    let f_label = fresh_function_label fi in
+    let nenv = bind_function env fi f_label in
+    let nenv = bind_formals nenv fi fo in
+    insert_fun f_label fi n_code, nenv
 
   and translate_expr env = function
     | S.Num i -> (None, T.Bipush(i))::[]
