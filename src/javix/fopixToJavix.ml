@@ -194,7 +194,8 @@ let rec translate p env : T.t * environment =
       translate_expr env (S.IfThenElse (bcomp, e1, e2))
 
     | S.IfThenElse (cond, e1, e2) ->
-      failwith "Luxon: cond this is your job!"
+      let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
+      translate_expr env (S.IfThenElse (bcomp, e1, e2))
 
     (*| S.IfThenElse (Binop, e1, e2) ->
       let ci, opopt = translate_cond env cond in
