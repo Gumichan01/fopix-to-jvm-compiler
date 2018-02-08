@@ -15,11 +15,12 @@ module T = Target.AST
     along the translation: *)
 type environment = {
   nextvar          : int;
-  variables        : (S.identifier * T.var) list;
+  variables        : (S.identifier * T.var * bool) list;
   function_labels  : (S.function_identifier * T.label) list;
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
   function_formals : (S.function_identifier * S.formals) list;
+  mutable box_nextval: bool ref;
 }
 
 (** Initially, the environment is empty. *)
@@ -28,6 +29,7 @@ let initial_environment () = {
   variables        = [];
   function_labels  = [];
   function_formals = [];
+  box_nextval      = ref true;
 }
 
 (** [lookup_function_label f env] returns the label of [f] in [env]. *)
@@ -52,12 +54,13 @@ let fresh_function_label =
 (** [bind_variable env x] associates Fopix variable x to the next
     available Javix variable, and return this variable and the updated
     environment *)
-let bind_variable env x =
+let bind_variable env x b =
   let v = T.Var env.nextvar in
   v,
+  b,
   { env with
     nextvar = env.nextvar + 1;
-    variables = (x,v) :: env.variables }
+    variables = (x,v,b) :: env.variables }
 
 let clear_all_variables env = {env with variables = []; nextvar = 0}
 
@@ -65,10 +68,13 @@ let find_variable env v =
   let rec aux_find_variable l v =
     match l with
     | [] -> None
-    | (fv, jv)::t ->
-      if fv = v then Some(jv)
+    | (fv, jv, bv)::t ->
+      if fv = v then Some(jv, bv)
       else aux_find_variable t v
   in aux_find_variable env.variables v
+
+let env_set_flag env b =
+  env.box_nextval := b
 
 (** For return addresses (or later higher-order functions),
     we encode some labels as numbers. These numbers could then
@@ -109,25 +115,34 @@ let rec translate p env : T.t * environment =
 
   (* proper exit in javix *)
   and translate_exit env =
-    let v = T.Var(env.nextvar -1) in (load_var v) @ ((None, T.Ireturn) :: [])
+    let v = T.Var(env.nextvar -1) in (load_var v true) @ ((None, T.Ireturn) :: [])
 
   and translate_bool b = (None, T.Bipush(match b with true -> 1 | false -> 0))
 
   (* store variable in javix *)
-  and store_var v = (None, T.Box) :: (None, T.Astore(v)) :: []
+  and store_var v b =
+    if b then
+      (None, T.Box) :: (None, T.Astore(v)) :: []
+    else
+      (None, T.Astore(v)) :: []
 
   (* load variable in javix *)
-  and load_var v = (None, T.Aload(v)) :: (None, T.Unbox) :: []
+  and load_var v b =
+    if b then
+      (None, T.Aload(v)) :: (None, T.Unbox) :: []
+    else
+      (None, T.Aload(v)) :: []
 
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) ->
       let n_code  = translate_expr env e in
-      let v, nenv = bind_variable env i in
+      let v, b, nenv = bind_variable env i !(env.box_nextval) in
+      let _ = env_set_flag nenv true in
       (*
          Each time you define a variable, take the integer bound to it at
          the top of the stack, box it, and store it in a variable indexed by v
       *)
-      let vstore = store_var v in
+      let vstore = store_var v b in
       o_code @ n_code @ vstore, nenv
     | S.DefFun (fi, fo, e) -> failwith "DefFun - Students! This is your job!"
 
@@ -142,7 +157,7 @@ let rec translate p env : T.t * environment =
 
     | S.Var v ->
       (match (find_variable env v) with
-      | Some(jv) -> load_var jv
+      | Some(jv, bv) -> load_var jv bv
       | None -> failwith "No Javix variable binded to this Fopix var")
 
     | S.Let (i, e1, e2) ->
@@ -162,19 +177,21 @@ let rec translate p env : T.t * environment =
 
     | S.BlockNew e ->
       let b = translate_expr env e in
-      b @ (None, T.Comment "Creating block")::(None, T.Anewarray)::[]
+      let _ = env_set_flag env false in
+      b @ (None, T.Comment "Creating block") :: (None, T.Anewarray) :: []
 
     | S.BlockGet (e1,e2) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
-      b @ i @ (None, T.Comment "Getting from block")::(None, T.AAload)::[]
+      b @ i @ (None, T.Comment "Getting from block") :: (None, T.AAload) :: []
 
     | S.BlockSet (e1,e2,e3) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
       let v = translate_expr env e3 in
       (* Adding a T.Bipush(0) as a return value for the S.DefVal *)
-      b @ i @ v @ (None, T.Comment "Setting block")::(None, T.AAstore)::(None, T.Bipush(0))::[]
+      b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.AAstore) ::
+      (None, T.Bipush(0)) :: []
 
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
