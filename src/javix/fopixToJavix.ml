@@ -197,9 +197,6 @@ let rec translate p env : T.t * environment =
       let c2 = translate_expr env e2 in
       c1 @ c2 @ (translate_op env op)
 
-    (* Currently, it isn't working properly because Anewarray pushes
-       an address and DefVal boxes it. Javix doesn't seem to like it ! *)
-
     | S.BlockNew e ->
       let b = translate_expr env e in
       let _ = env_set_flag env false in
