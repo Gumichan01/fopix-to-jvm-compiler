@@ -136,9 +136,6 @@ let rec translate p env : T.t * environment =
   and translate_exit env =
     let v = T.Var(env.nextvar -1) in (load_var v true) @ ((None, T.Ireturn) :: [])
 
-  and translate_bool loption b =
-  (loption, T.Bipush(match b with true -> 1 | false -> 0))
-
   (* store variable in javix *)
   and store_var v b =
     if b then
@@ -304,8 +301,11 @@ let rec translate p env : T.t * environment =
       [(None, T.Goto(endlab))] @ label_if thlab ethen @
       [Some(endlab), T.Comment("endif")]
 
-    and label_if labelif ((None, i)::q) =
-      (Some(labelif), i)::q
+    and label_if labelif =
+      function
+      | (None, i)::q -> (Some(labelif), i)::q
+      | (Some(_), _)::_ as l -> l
+      | [] -> assert false (* I cannot get an empty then-block or else-block *)
 
     and translate_cmp =
      function
