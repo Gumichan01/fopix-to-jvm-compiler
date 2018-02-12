@@ -160,6 +160,9 @@ and expression runtime = function
   | FunCall (fexpr, args) ->
     failwith "Student! This is your job!"
 
+  | Print s ->
+     print_string s; VUnit
+
 and binop runtime op e1 e2 =
   let v1 = expression runtime e1 in
   let v2 = expression runtime e2 in

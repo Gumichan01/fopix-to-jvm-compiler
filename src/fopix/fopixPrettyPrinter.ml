@@ -71,15 +71,7 @@ and expression = function
      string ":=" ++ group (expression e3)
   | BinOp (op,e1,e2) ->
      group (parens (expression e1 ++ string (binop op) ++ expression e2))
-  | Print s ->
-     let p = ref "" in
-     String.iter (fun c -> match c with
-                           | '\\' -> p := !p ^ "\\\\"
-                           | '\n' -> p := !p ^ "\\n"
-                           | '\t' -> p := !p ^ "\\t"
-                           | '"'  -> p := !p ^ "\\\""
-                           | _    -> p := !p ^ (String.make 1 c)) s;
-     string ("\"" ^ !p ^ "\"")
+  | Print s -> string ("\""^String.escaped s^"\"")
 
 and binop = function
   | Add -> "+"

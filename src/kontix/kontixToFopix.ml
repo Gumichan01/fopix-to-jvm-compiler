@@ -62,3 +62,4 @@ and basicexpr = function
   | S.BlockGet (e1,e2) -> T.BlockGet (basicexpr e1, basicexpr e2)
   | S.BlockSet (e1,e2,e3) ->
      T.BlockSet (basicexpr e1, basicexpr e2, basicexpr e3)
+  | S.Print s -> T.Print s
