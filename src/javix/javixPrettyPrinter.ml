@@ -89,27 +89,11 @@ and instruction p = function
     (String.concat "\n\t" labs)^
     "\n\tdefault: "^dft
   | Checkarray -> "checkcast [Ljava/lang/Object;"
-  | Print s -> print s
-
-and print s =
-  let len = String.length s in
-  if len = 0 then "iconst_0"
-  else
-      let create_array =
-        "getstatic java/lang/System/out Ljava/io/PrintStream;\n\t" ^
-        "new java/lang/String\n\tdup\n\tbipush " ^ (string_of_int len) ^
-        "\n\tnewarray byte" in
-      let fill_array =
-        let _fill_array = ref "" in
-        Bytes.iteri (fun i c ->
-                _fill_array := "\n\tdup\n\tbipush " ^ string_of_int i ^
-                               "\n\tbipush " ^ string_of_int (int_of_char c) ^
-                               "\n\tbastore" ^ !_fill_array)
-            (Bytes.of_string s); !_fill_array in
-      create_array ^ fill_array ^
-          "\n\tinvokespecial java/lang/String/<init>([B)V" ^
-          "\n\tinvokevirtual java/io/PrintStream/print(Ljava/lang/String;)V" ^
-          "\n\ticonst_0"
+  | Print s ->
+    "getstatic java/lang/System/out Ljava/io/PrintStream;\n\t" ^
+    "ldc \""^String.escaped s^"\"\n\t" ^
+    "invokevirtual java/io/PrintStream/print(Ljava/lang/String;)V\n\t" ^
+    "iconst_0"
 
 and var (Var v) = string_of_int v
 
