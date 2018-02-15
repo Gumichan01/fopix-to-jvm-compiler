@@ -261,6 +261,10 @@ let rec translate p env : T.t * environment =
     | S.FunCall _ ->
       failwith "FunCall - Students! this is your job!"
 
+    (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
+    | S.Print s ->
+      failwith "Print - Students! this is your job!"
+
     (* Functions related to Binary operations *)
 
     (* Check if an operator is arithmetic - '+', '-', '*', '/', ... *)
@@ -334,7 +338,6 @@ let rec translate p env : T.t * environment =
      | S.Ge -> T.Ge
      | S.Gt -> T.Gt
      | _ -> failwith "Binop: invalid operation"
-
 
   in program env p
 
