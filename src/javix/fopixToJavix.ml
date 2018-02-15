@@ -245,8 +245,7 @@ let rec translate p env : T.t * environment =
       failwith "FunCall - Students! this is your job!"
 
     (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
-    | S.Print s ->
-      failwith "Print - Students! this is your job!"
+    | S.Print s -> (None, T.Print(s)) :: []
 
     (* Functions related to Binary operations *)
 
