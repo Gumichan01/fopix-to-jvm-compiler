@@ -18,7 +18,7 @@ val z = 13
 val bimp = if z = 13 then (if 1 = 1 then (if 1 = 10 then 1 else 30) else 20) else 0
 */
 
-val bo = if (1 + 0) then 1 else 2
+val bo = if 1 then 1 else 2
 
 val a = 42
 val bo = if a then 1 else 2
