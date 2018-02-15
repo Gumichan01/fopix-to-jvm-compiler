@@ -218,23 +218,6 @@ let rec translate p env : T.t * environment =
       let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
       translate_expr env (S.IfThenElse (bcomp, e1, e2))
 
-    (*| S.IfThenElse (Binop, e1, e2) ->
-      let ci, opopt = translate_cond env cond in
-      let etrue  = translate_expr env e1 in
-      let efalse = translate_expr env e2 in
-      let ie =
-       match opopt with
-       | Some(op) -> translate_cmp op
-       | None     -> failwith ("Invalid if-block")
-      in
-      let thlab = fresh_label "then" in
-      let endlab = fresh_label "endif" in
-      ci @ [(None, T.If_icmp(ie, thlab))] @ efalse @
-      [(None, T.Goto(endlab))] @ [Some(thlab), T.Comment("")] @ etrue @
-      [Some(thlab), T.Comment("")] @ []*)
-
-      (*failwith "If then else - Students! this is your job!"*)
-
     | S.BinOp(op, e1, e2) ->
       if is_arith op
       then generate_arith env (op, e1, e2)
