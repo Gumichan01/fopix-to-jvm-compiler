@@ -214,6 +214,9 @@ and test_condition runtime cond etrue efalse =
   | VInt(0) | VBool(false) -> expression runtime efalse
   | _ -> failwith "Unrecognized result of contition (IfThenElse)"
 
+  | Print s ->
+     print_string s; VUnit
+
 and binop runtime op e1 e2 =
   let v1 = expression runtime e1 in
   let v2 = expression runtime e2 in
