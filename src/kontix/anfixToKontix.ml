@@ -11,4 +11,4 @@ type environment = unit (* TODO *)
 
 let initial_environment () = () (* TODO *)
 
-let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
+let rec translate (p : S.t) env = (failwith "TODO translate" : T.t * environment)
