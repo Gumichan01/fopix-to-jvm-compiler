@@ -187,6 +187,9 @@ and expression runtime = function
   | FunCall (fexpr, args) ->
     fun_call runtime fexpr args
 
+  | Print s ->
+     print_string s; VUnit
+
 and fun_call runtime fexpr args =
   (* values must be used as parameters of f *)
   let values = List.map (expression runtime) args in
@@ -207,15 +210,12 @@ and mbind env args values =
     let nenv = Environment.bind env a v in
     mbind nenv qa qv
 
-
 and test_condition runtime cond etrue efalse =
   match cond with
   | VInt(1) | VBool(true) -> expression runtime etrue
   | VInt(0) | VBool(false) -> expression runtime efalse
   | _ -> failwith "Unrecognized result of contition (IfThenElse)"
 
-  | Print s ->
-     print_string s; VUnit
 
 and binop runtime op e1 e2 =
   let v1 = expression runtime e1 in
