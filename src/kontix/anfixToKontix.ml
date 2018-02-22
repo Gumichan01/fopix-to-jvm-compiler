@@ -22,6 +22,8 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
     let rec aux_retrieve p (d, f) =
       match p with
       | [] -> (d, f)
-      | (S.DefVal(_) as dv)::q -> aux_retrieve q ((d @ [dv]), f)
-      | (S.DefFun(_) as df)::q -> aux_retrieve q (d, (f @ [df]))
+      | (S.DefVal(_) as dv)::q ->
+        let l = d @ [dv] in aux_retrieve q (l, f)
+      | (S.DefFun(_) as df)::q ->
+        let l = f @ [df] in aux_retrieve q (d, l)
     in aux_retrieve p ([], [])
