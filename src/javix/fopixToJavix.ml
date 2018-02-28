@@ -242,9 +242,10 @@ let rec translate p env : T.t * environment =
       (None, T.Bipush(0)) :: []
 
     | S.FunCall (e, el) ->
-      funcall_prologue env e el ;
-      funcall_call env e el ;
-      funcall_epilogue env e el
+      let p = funcall_prologue env e el in
+      let c = funcall_call env e el in
+      let e = funcall_epilogue env e el in
+      p @ c @ e :: []
 
     (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
     | S.Print s -> (None, T.Print(s)) :: []
@@ -342,9 +343,12 @@ let rec translate p env : T.t * environment =
       failwith "Students! This is our job (FunCall Saving Vars)"
 
     (*  It should: 
-        - Swap
+        X Swap
+        - Restore Vars
         - Goto Dispatch *)
     and funcall_epilogue env e el =
+      let s = (None, T.Swap) :: [] in
+      let r = restore_vars env e el in
       failwith "Students! This is our job (FunCall Epilogue)"
 
     and restore_vars env e el =
