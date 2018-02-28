@@ -241,8 +241,9 @@ let rec translate p env : T.t * environment =
       b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.AAstore) ::
       (None, T.Bipush(0)) :: []
 
-    | S.FunCall _ ->
-      failwith "FunCall - Students! this is your job!"
+    | S.FunCall (e, el) ->
+      let _ = funcall_prologue env e el in
+      funcall_call env e el
 
     (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
     | S.Print s -> (None, T.Print(s)) :: []
@@ -320,6 +321,14 @@ let rec translate p env : T.t * environment =
      | S.Ge -> T.Ge
      | S.Gt -> T.Gt
      | _ -> failwith "Binop: invalid operation"
+
+    (* FunCall related functions *)
+
+    and funcall_prologue env e el =
+      failwith "Students! This is our job (FunCall Prologue)."
+
+    and funcall_call env e el =
+      failwith "Students! This is our job (FunCall call)."
 
   in program env p
 
