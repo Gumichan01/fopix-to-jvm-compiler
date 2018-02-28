@@ -242,8 +242,9 @@ let rec translate p env : T.t * environment =
       (None, T.Bipush(0)) :: []
 
     | S.FunCall (e, el) ->
-      let _ = funcall_prologue env e el in
-      funcall_call env e el
+      funcall_prologue env e el ;
+      funcall_call env e el ;
+      funcall_epilogue env e el
 
     (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
     | S.Print s -> (None, T.Print(s)) :: []
@@ -325,10 +326,29 @@ let rec translate p env : T.t * environment =
     (* FunCall related functions *)
 
     and funcall_prologue env e el =
-      failwith "Students! This is our job (FunCall Prologue)."
+      save_vars env e el
+      (*  Then push return address
+          Then push args into stack
+          Then Goto F via Calcul Goto Dispatch *)
 
+    (*  It should:
+        - pop args from stack into vars
+        - execute core code
+        - place final result at the top of the stack *)
     and funcall_call env e el =
-      failwith "Students! This is our job (FunCall call)."
+      failwith "Students! This is our job (FunCall Call)."
+
+    and save_vars env e el =
+      failwith "Students! This is our job (FunCall Saving Vars)"
+
+    (*  It should: 
+        - Swap
+        - Goto Dispatch *)
+    and funcall_epilogue env e el =
+      failwith "Students! This is our job (FunCall Epilogue)"
+
+    and restore_vars env e el =
+      failwith "Students! This is our job (FunCall Restore Vars)"
 
   in program env p
 
