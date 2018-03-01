@@ -46,14 +46,38 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
 
   and translate_deff env f = failwith "TODO definition of function"
 
-  and translate_expr env =
+  and translate_expr env e : T.basicexpr =
+    match e with
+    | S.Simple(sexpr)  -> translate_simple sexpr
+    | S.Let(_,_,_) -> failwith "TODO Let" (* put the id in an environment *)
+    | S.IfThenElse(_,_,_) -> failwith "TODO IfThenElse"
+    | S.BinOp(o, e1, e2) ->
+      (*let ko = translate_op o in*)
+      let ke1 = translate_simple e1 in
+      let ke2 = translate_simple e2 in
+      T.BinOp(o, ke1, ke2)
+    | S.BlockNew(_) -> failwith "TODO BlockNew"
+    | S.BlockGet(_,_) -> failwith "TODO BlockGet"
+    | S.BlockSet(_,_,_) -> failwith "TODO BlockSet"
+    | S.FunCall(_,_) -> failwith "TODO FunCall"
+    | S.Print(_) -> failwith "TODO Print"
+
+  (* This fucntion can be unused because S.binop = T.binop = FopixAST.binop *)
+  and translate_op (* : T.binop *) =
     function
-    | S.Simple(_)  -> ()
-    | S.Let(_,_,_) -> ()
-    | S.IfThenElse(_,_,_) -> ()
-    | S.BinOp(_,_,_) -> ()
-    | S.BlockNew(_) -> ()
-    | S.BlockGet(_,_) -> ()
-    | S.BlockSet(_,_,_) -> ()
-    | S.FunCall(_,_) -> ()
-    | S.Print(_) -> ()
+    | S.Add -> T.Add
+    | S.Sub -> T.Sub
+    | S.Mul -> T.Mul
+    | S.Div -> T.Div
+    | S.Mod -> T.Mod
+    | S.Eq  -> T.Eq
+    | S.Le  -> T.Le
+    | S.Lt  -> T.Lt
+    | S.Ge  -> T.Ge
+    | S.Gt  -> T.Gt
+
+  and translate_simple (* : T.basicexpr *) =
+    function
+    | S.Num(x) -> T.Num(x)
+    | S.FunName(s) -> T.FunName(s)
+    | S.Var(s) -> T.Var(s)
