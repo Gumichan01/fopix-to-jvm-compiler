@@ -31,19 +31,22 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   and translate_defs env dl =
     match dl with
     | [] -> []
-    | h::q ->
-      let kdef = (translate_defv env h) in
+    | S.DefVal(i, e)::q ->
+      let kdef = (translate_defv env (i, e)) in
       kdef :: (translate_defs env q)
+    | _ -> assert(false) (* pre-condition : list of S.DefVal *)
 
   (* I should do something with env *)
-  and translate_defv env dv = failwith "TODO definition of value"
+  and translate_defv env (i, e) = (*failwith "TODO definition of value"*)
+    T.Let(i, (translate_expr env e), T.Var(i))
 
   and translate_funs env fl =
     match fl with
     | [] -> []
-    | h::q ->
-      let kdef = (translate_deff env h) in
+    | (S.DefFun(_,_,_) as df)::q ->
+      let kdef = (translate_deff env df) in
       kdef :: (translate_funs env q)
+    | _ -> assert(false) (* pre-condition : list of S.DefVal *)
 
   (* I should do something with env *)
   and translate_deff env f = failwith "TODO definition of function"
