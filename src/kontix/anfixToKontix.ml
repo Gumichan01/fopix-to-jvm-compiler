@@ -54,7 +54,6 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | S.Let(_,_,_) -> failwith "TODO Let" (* put the id in an environment *)
     | S.IfThenElse(_,_,_) -> failwith "TODO IfThenElse"
     | S.BinOp(o, e1, e2) ->
-      (*let ko = translate_op o in*)
       let ke1 = translate_simple e1 in
       let ke2 = translate_simple e2 in
       T.BinOp(o, ke1, ke2)
@@ -71,20 +70,6 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | S.FunCall(_,_) -> failwith "TODO FunCall" (* hum... *)
 
     | S.Print(s) -> T.Print(s)
-
-  (* This fucntion can be unused because S.binop = T.binop = FopixAST.binop *)
-  and translate_op (* : T.binop *) =
-    function
-    | S.Add -> T.Add
-    | S.Sub -> T.Sub
-    | S.Mul -> T.Mul
-    | S.Div -> T.Div
-    | S.Mod -> T.Mod
-    | S.Eq  -> T.Eq
-    | S.Le  -> T.Le
-    | S.Lt  -> T.Lt
-    | S.Ge  -> T.Ge
-    | S.Gt  -> T.Gt
 
   and translate_simple (* : T.basicexpr *) =
     function
