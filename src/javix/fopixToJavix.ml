@@ -245,7 +245,7 @@ let rec translate p env : T.t * environment =
       let p = funcall_prologue env e el in
       let c = funcall_call env e el in
       let e = funcall_epilogue env e el in
-      p @ c @ e :: []
+      p @ c @ e @ (None, T.Comment "FunCall End") :: []
 
     (* Récupéré d'un merge request. Quelle utilité ? Je ne sais pas encore... *)
     | S.Print s -> (None, T.Print(s)) :: []
@@ -339,20 +339,35 @@ let rec translate p env : T.t * environment =
     and funcall_call env e el =
       failwith "Students! This is our job (FunCall Call)."
 
+    (*  I do not remember if we should Astore or Bipush variables. 
+        If we should Bipush instead, just change store_var by a Bipush. *)
     and save_vars env e el =
-      failwith "Students! This is our job (FunCall Saving Vars)"
+      let rec save_var_aux env = function
+        | (S.Var v)::t ->
+          (match (find_variable env v) with
+            | Some(jv, bv) -> (store_var jv bv) :: save_var_aux env t
+            | None -> failwith "No Javix variable binded to this Fopix var")
+        | [] -> []
+        | _::t -> save_var_aux env t
+      in List.flatten (save_var_aux env el)
 
     (*  It should: 
         X Swap
-        - Restore Vars
+        X Restore Vars
         - Goto Dispatch *)
     and funcall_epilogue env e el =
-      let s = (None, T.Swap) :: [] in
       let r = restore_vars env e el in
-      failwith "Students! This is our job (FunCall Epilogue)"
+      r @ [(None, T.Swap)]
 
     and restore_vars env e el =
-      failwith "Students! This is our job (FunCall Restore Vars)"
+      let rec r_vars_aux env = function
+        | (S.Var v)::t ->
+          (match (find_variable env v) with
+            | Some(jv, bv) -> (load_var jv bv) :: r_vars_aux env t
+            | None -> failwith "No Javix variable binded to this Fopix var")
+        | _::t -> r_vars_aux env t
+        | [] -> []
+      in List.flatten (r_vars_aux env el)
 
   in program env p
 
