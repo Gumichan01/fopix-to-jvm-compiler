@@ -11,7 +11,7 @@ type environment = unit (* TODO *)
 
 let initial_environment () = () (* TODO *)
 
-let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : T.t * environment*)
+let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   let ldef, fdef = retrieve_definitions p in
   (* Just to test *)
   print_string("hello "^ string_of_int(List.length ldef) ^" - "
@@ -35,6 +35,7 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
       let kdef = (translate_defv env h) in
       kdef :: (translate_defs env q)
 
+  (* I should do something with env *)
   and translate_defv env dv = failwith "TODO definition of value"
 
   and translate_funs env fl =
@@ -44,6 +45,7 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
       let kdef = (translate_deff env h) in
       kdef :: (translate_funs env q)
 
+  (* I should do something with env *)
   and translate_deff env f = failwith "TODO definition of function"
 
   and translate_expr env e : T.basicexpr =
