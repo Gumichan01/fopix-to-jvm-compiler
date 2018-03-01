@@ -48,11 +48,18 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   (* I should do something with env *)
   and translate_deff env f = failwith "TODO definition of function"
 
+  (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
   and translate_expr env e : T.basicexpr =
     match e with
-    | S.Simple(sexpr)  -> translate_simple sexpr
-    | S.Let(_,_,_) -> failwith "TODO Let" (* put the id in an environment *)
-    | S.IfThenElse(_,_,_) -> failwith "TODO IfThenElse"
+    | S.Simple(sexpr) -> translate_simple sexpr
+    | S.Let(i, e, c) ->
+      T.Let(i, (translate_expr env e), (translate_expr env c))
+    | S.IfThenElse(cond, t, f) ->
+      let kc = (translate_simple cond) in
+      let kt = (translate_expr env t) in
+      let kf = (translate_expr env f) in
+      T.IfThenElse(kc, kt, kf)
+
     | S.BinOp(o, e1, e2) ->
       let ke1 = translate_simple e1 in
       let ke2 = translate_simple e2 in
