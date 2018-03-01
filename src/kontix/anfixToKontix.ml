@@ -27,3 +27,33 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
       | (S.DefFun(_) as df)::q ->
         let l = f @ [df] in aux_retrieve q (d, l)
     in aux_retrieve p ([], [])
+
+  and translate_defs env dl =
+    match dl with
+    | [] -> []
+    | h::q ->
+      let kdef = (translate_defv env h) in
+      kdef :: (translate_defs env q)
+
+  and translate_defv env dv = failwith "TODO definition of value"
+
+  and translate_funs env fl =
+    match fl with
+    | [] -> []
+    | h::q ->
+      let kdef = (translate_deff env h) in
+      kdef :: (translate_funs env q)
+
+  and translate_deff env f = failwith "TODO definition of function"
+
+  and translate_expr env =
+    function
+    | S.Simple(_)  -> ()
+    | S.Let(_,_,_) -> ()
+    | S.IfThenElse(_,_,_) -> ()
+    | S.BinOp(_,_,_) -> ()
+    | S.BlockNew(_) -> ()
+    | S.BlockGet(_,_) -> ()
+    | S.BlockSet(_,_,_) -> ()
+    | S.FunCall(_,_) -> ()
+    | S.Print(_) -> ()
