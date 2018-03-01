@@ -56,11 +56,19 @@ let rec translate (p : S.t) (env : environment) = (*failwith "TODO translate" : 
       let ke1 = translate_simple e1 in
       let ke2 = translate_simple e2 in
       T.BinOp(o, ke1, ke2)
-    | S.BlockNew(_) -> failwith "TODO BlockNew"
-    | S.BlockGet(_,_) -> failwith "TODO BlockGet"
-    | S.BlockSet(_,_,_) -> failwith "TODO BlockSet"
-    | S.FunCall(_,_) -> failwith "TODO FunCall"
-    | S.Print(_) -> failwith "TODO Print"
+
+    | S.BlockNew(b) ->
+      T.BlockNew((translate_simple b))
+
+    | S.BlockGet(a, i) ->
+      T.BlockGet((translate_simple a), (translate_simple i))
+
+    | S.BlockSet(a, i, v) ->
+      T.BlockSet((translate_simple a), (translate_simple i), (translate_simple v))
+
+    | S.FunCall(_,_) -> failwith "TODO FunCall" (* hum... *)
+
+    | S.Print(s) -> T.Print(s)
 
   (* This fucntion can be unused because S.binop = T.binop = FopixAST.binop *)
   and translate_op (* : T.binop *) =
