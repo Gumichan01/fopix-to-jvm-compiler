@@ -55,7 +55,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
 
     | _ -> assert(false) (* pre-condition : list of S.DefFun *)
 
-  (* I should do something with env *)
+  (* Is this function necessary? *)
   and translate_function env f = failwith "TODO definition of function"
 
   (* Should I return a pair <T.tailexpr, environment> instead of T.tailexpr? *)
@@ -66,17 +66,21 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | S.Let(id, e1, e2) ->
       (match translate_expr_tobasic env e1 with
       | Some(e) -> T.TLet(id, e, (translate_expr env e2))
-      | None -> failwith "TODO: funcall")
+      | None -> failwith "TODO: FunCall in Let")
 
     | S.IfThenElse(c, e1, e2) ->
       T.TIfThenElse((translate_simple c), (translate_expr env e1), (translate_expr env e2))
 
-    | S.BinOp(_) as b ->
-      (match translate_expr_tobasic env b with
-      | Some(bin) -> T.TContCall(bin)
-      | _ -> assert(false) (* non-sense *))
+    | S.BinOp(_)
+    | S.BlockNew(_)
+    | S.BlockGet(_)
+    | S.BlockSet(_)
+    | S.Print(_) as instr ->
+      (match translate_expr_tobasic env instr with
+       | Some(i) -> T.TContCall(i)
+       | _ -> assert(false) (* non-sense *))
 
-    | _ -> failwith "TODO translate_expr"
+    | S.FunCall(_) -> failwith "TODO FunCall"
 
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
   and translate_expr_tobasic env e : T.basicexpr option =
