@@ -59,16 +59,20 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   and translate_function env f = failwith "TODO definition of function"
 
   (* Should I return a pair <T.tailexpr, environment> instead of T.tailexpr? *)
-  and translate_expr_reboot env = (*failwith "TODO S.expression -> T.tailexpr"*)
+  and translate_expr env =
     function
-    | S.Simple(sexpr)   -> T.TContCall(translate_simple sexpr)
+    | S.Simple(sexpr) -> T.TContCall(translate_simple sexpr)
 
     | S.Let(id, e1, e2) ->
       (match (translate_bexpr env e1) with
-      | Some(e) -> T.TLet(id, e, (translate_expr_reboot env e2))
+      | Some(e) -> T.TLet(id, e, (translate_expr env e2))
       | None -> failwith "TODO: funcall")
 
-    | _ -> failwith "TODO translate_expr_reboot"
+    | S.IfThenElse(c, e1, e2) ->
+      T.TIfThenElse((translate_simple c), (translate_expr env e1), (translate_expr env e2))
+
+
+    | _ -> failwith "TODO translate_expr"
 
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
   and translate_bexpr env e : T.basicexpr option =
