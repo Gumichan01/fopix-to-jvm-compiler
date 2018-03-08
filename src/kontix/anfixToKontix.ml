@@ -43,8 +43,8 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | _ -> assert(false) (* pre-condition : list of S.DefVal *)
 
   (* I should do something with env, right? *)
-  and translate_defv env (i, e) =
-    T.Let(i, (translate_expr env e), T.Var(i))
+  and translate_defv env (i, e) = failwith "translate_defv"
+    (*T.Let(i, (translate_expr env e), T.Var(i))*)
 
   (* Translation of functions *)
   and translate_funs env funclist =
@@ -60,39 +60,54 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   (* I should do something with env *)
   and translate_function env f = failwith "TODO definition of function"
 
-  and translate_expr_reboot env e : T.tailexpr = failwith "TODO S.expression -> T.tailexpr"
+  (* Should I return a pair <T.tailexpr, environment> instead of T.tailexpr? *)
+  and translate_expr_reboot env = (*failwith "TODO S.expression -> T.tailexpr"*)
+    function
+    | S.Simple(sexpr)   -> T.TContCall(translate_simple sexpr)
+
+    (*)| S.Let(id, e1, e2) ->
+      (match (translate_bexpr env e1) with
+      | Some(e) -> T.TLet(id, e, (translate_expr_reboot env e2))
+      | None -> failwith "TODO: funcall")*)
+
+    | _ -> failwith "TODO translate_expr_reboot"
 
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
-  and translate_expr env e : T.basicexpr =
+  and translate_bexpr env e : T.basicexpr option =
     match e with
-    | S.Simple(sexpr) -> translate_simple sexpr
+    | S.Simple(sexpr) -> Some(translate_simple sexpr)
 
     | S.Let(i, e, c) ->
-      T.Let(i, (translate_expr env e), (translate_expr env c))
+      (match (translate_bexpr env e), (translate_bexpr env c) with
+       | Some(e1), Some(e2) -> Some(T.Let(i, e1, e2))
+       | _ -> None)
 
     | S.IfThenElse(cond, t, f) ->
       let kc = (translate_simple cond) in
-      let kt = (translate_expr env t) in
-      let kf = (translate_expr env f) in
-      T.IfThenElse(kc, kt, kf)
+      let kt = (translate_bexpr env t) in
+      let kf = (translate_bexpr env f) in
+      (match kt, kf with
+       | Some(tr), Some(fs) -> Some(T.IfThenElse(kc, tr, fs))
+       | _ -> None)
 
     | S.BinOp(o, e1, e2) ->
       let ke1 = translate_simple e1 in
       let ke2 = translate_simple e2 in
-      T.BinOp(o, ke1, ke2)
+      Some(T.BinOp(o, ke1, ke2))
 
     | S.BlockNew(b) ->
-      T.BlockNew((translate_simple b))
+      Some(T.BlockNew((translate_simple b)))
 
     | S.BlockGet(a, i) ->
-      T.BlockGet((translate_simple a), (translate_simple i))
+      Some(T.BlockGet((translate_simple a), (translate_simple i)))
 
     | S.BlockSet(a, i, v) ->
-      T.BlockSet((translate_simple a), (translate_simple i), (translate_simple v))
+      Some(T.BlockSet((translate_simple a), (translate_simple i),
+           (translate_simple v)))
 
-    | S.FunCall(_,_) -> failwith "TODO FunCall" (* hum... *)
+    | S.FunCall(_,_) -> None
 
-    | S.Print(s) -> T.Print(s)
+    | S.Print(s) -> Some(T.Print(s))
 
   and translate_simple (* : T.basicexpr *) =
     function
