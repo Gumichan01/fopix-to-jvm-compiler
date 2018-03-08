@@ -12,11 +12,12 @@ type environment = unit (* TODO *)
 let initial_environment () = () (* TODO *)
 
 let rec translate (p : S.t) (env : environment) = (* TODO translate *)
-  let ldef, fdef = retrieve_definitions p in
+  let ldeflist, fdeflist = retrieve_definitions p in
   (* Just to test *)
-  print_string("hello "^ string_of_int(List.length ldef) ^" - "
-               ^ string_of_int(List.length fdef)); print_endline("");
-               (([],T.TContCall(T.Print("exit"))), env)
+  print_string("hello "^ string_of_int(List.length ldeflist) ^" - "
+               ^ string_of_int(List.length fdeflist)); print_endline("");
+               (([], (translate_defs env ldeflist) ), env)
+               (*(([], T.TContCall(T.Print("exit")) ), env)*)
 
   and retrieve_definitions p =
     let rec aux_retrieve p (defl, funcl) =
@@ -34,17 +35,14 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   (* Translation of definitions *)
   and translate_defs env deflist =
     match deflist with
-    | [] -> []
+    | [] -> T.TContCall(T.Num(1))
 
     | S.DefVal(i, e)::q ->
-      let kdef = (translate_defv env (i, e)) in
-      kdef :: (translate_defs env q)
+      (match (translate_bexpr env e) with
+      | Some(te) -> T.TLet(i, te, (translate_defs env q))
+      | None -> failwith "translate_defs")
 
     | _ -> assert(false) (* pre-condition : list of S.DefVal *)
-
-  (* I should do something with env, right? *)
-  and translate_defv env (i, e) = failwith "translate_defv"
-    (*T.Let(i, (translate_expr env e), T.Var(i))*)
 
   (* Translation of functions *)
   and translate_funs env funclist =
@@ -65,10 +63,10 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     function
     | S.Simple(sexpr)   -> T.TContCall(translate_simple sexpr)
 
-    (*)| S.Let(id, e1, e2) ->
+    | S.Let(id, e1, e2) ->
       (match (translate_bexpr env e1) with
       | Some(e) -> T.TLet(id, e, (translate_expr_reboot env e2))
-      | None -> failwith "TODO: funcall")*)
+      | None -> failwith "TODO: funcall")
 
     | _ -> failwith "TODO translate_expr_reboot"
 
