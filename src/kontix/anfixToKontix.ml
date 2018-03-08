@@ -19,44 +19,55 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
                (([],T.TContCall(T.Print("exit"))), env)
 
   and retrieve_definitions p =
-    let rec aux_retrieve p (d, f) =
+    let rec aux_retrieve p (defl, funcl) =
       match p with
-      | [] -> (d, f)
+      | [] -> (defl, funcl)
+
       | (S.DefVal(_) as dv)::q ->
-        let l = d @ [dv] in aux_retrieve q (l, f)
+        let ndefl = defl @ [dv] in aux_retrieve q (ndefl, funcl)
+
       | (S.DefFun(_) as df)::q ->
-        let l = f @ [df] in aux_retrieve q (d, l)
+        let nfuncl = funcl @ [df] in aux_retrieve q (defl, nfuncl)
+
     in aux_retrieve p ([], [])
 
-  and translate_defs env dl =
-    match dl with
+  (* Translation of definitions *)
+  and translate_defs env deflist =
+    match deflist with
     | [] -> []
+
     | S.DefVal(i, e)::q ->
       let kdef = (translate_defv env (i, e)) in
       kdef :: (translate_defs env q)
+
     | _ -> assert(false) (* pre-condition : list of S.DefVal *)
 
-  (* I should do something with env *)
-  and translate_defv env (i, e) = (*failwith "TODO definition of value"*)
+  (* I should do something with env, right? *)
+  and translate_defv env (i, e) =
     T.Let(i, (translate_expr env e), T.Var(i))
 
-  and translate_funs env fl =
-    match fl with
+  (* Translation of functions *)
+  and translate_funs env funclist =
+    match funclist with
     | [] -> []
+
     | (S.DefFun(_,_,_) as df)::q ->
-      let kdef = (translate_deff env df) in
+      let kdef = (translate_function env df) in
       kdef :: (translate_funs env q)
-    | _ -> assert(false) (* pre-condition : list of S.DefVal *)
+
+    | _ -> assert(false) (* pre-condition : list of S.DefFun *)
 
   (* I should do something with env *)
-  and translate_deff env f = failwith "TODO definition of function"
+  and translate_function env f = failwith "TODO definition of function"
 
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
   and translate_expr env e : T.basicexpr =
     match e with
     | S.Simple(sexpr) -> translate_simple sexpr
+
     | S.Let(i, e, c) ->
       T.Let(i, (translate_expr env e), (translate_expr env c))
+
     | S.IfThenElse(cond, t, f) ->
       let kc = (translate_simple cond) in
       let kt = (translate_expr env t) in
