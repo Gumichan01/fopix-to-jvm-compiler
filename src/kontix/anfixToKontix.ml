@@ -38,7 +38,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | [] -> T.TContCall(T.Num(1))
 
     | S.DefVal(i, e)::q ->
-      (match (translate_bexpr env e) with
+      (match (translate_expr_tobasic env e) with
       | Some(te) -> T.TLet(i, te, (translate_defs env q))
       | None -> failwith "translate_defs")
 
@@ -64,30 +64,34 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | S.Simple(sexpr) -> T.TContCall(translate_simple sexpr)
 
     | S.Let(id, e1, e2) ->
-      (match (translate_bexpr env e1) with
+      (match translate_expr_tobasic env e1 with
       | Some(e) -> T.TLet(id, e, (translate_expr env e2))
       | None -> failwith "TODO: funcall")
 
     | S.IfThenElse(c, e1, e2) ->
       T.TIfThenElse((translate_simple c), (translate_expr env e1), (translate_expr env e2))
 
+    | S.BinOp(_) as b ->
+      (match translate_expr_tobasic env b with
+      | Some(bin) -> T.TContCall(bin)
+      | _ -> assert(false) (* non-sense *))
 
     | _ -> failwith "TODO translate_expr"
 
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
-  and translate_bexpr env e : T.basicexpr option =
+  and translate_expr_tobasic env e : T.basicexpr option =
     match e with
     | S.Simple(sexpr) -> Some(translate_simple sexpr)
 
     | S.Let(i, e, c) ->
-      (match (translate_bexpr env e), (translate_bexpr env c) with
+      (match (translate_expr_tobasic env e), (translate_expr_tobasic env c) with
        | Some(e1), Some(e2) -> Some(T.Let(i, e1, e2))
        | _ -> None)
 
     | S.IfThenElse(cond, t, f) ->
       let kc = (translate_simple cond) in
-      let kt = (translate_bexpr env t) in
-      let kf = (translate_bexpr env f) in
+      let kt = (translate_expr_tobasic env t) in
+      let kf = (translate_expr_tobasic env f) in
       (match kt, kf with
        | Some(tr), Some(fs) -> Some(T.IfThenElse(kc, tr, fs))
        | _ -> None)
