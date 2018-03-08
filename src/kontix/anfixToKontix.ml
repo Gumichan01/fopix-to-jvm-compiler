@@ -60,6 +60,8 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   (* I should do something with env *)
   and translate_function env f = failwith "TODO definition of function"
 
+  and translate_expr_reboot env e : T.tailexpr = failwith "TODO S.expression -> T.tailexpr"
+
   (* Should I return a pair <T.basicexpr, environment> instead of T.basicexpr? *)
   and translate_expr env e : T.basicexpr =
     match e with
