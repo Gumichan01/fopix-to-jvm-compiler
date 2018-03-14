@@ -146,12 +146,30 @@ let basic_program code =
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
   let rec program env defs =
-    let code, env = List.fold_left translate_definition ([],env) defs
-    in basic_program (code @ (translate_exit env)), env
+    let code, env = List.fold_left translate_definition ([],env) defs in
+    let tableswitch = insert_tableswitch env in
+    basic_program (code @ tableswitch @ (translate_exit env)), env
 
   (* proper exit in javix *)
   and translate_exit env =
     let v = T.Var(env.nextvar -1) in (load_var v true) @ ((None, T.Ireturn) :: [])
+
+  (*  as its name implies, it inserts a tableswitch with all seen labels
+      and a default label that should return -1 *)
+  and insert_tableswitch env =
+    let default_label = T.Label("default") in
+    let dispatch_label = Some(T.Label("dispatch")) in
+    let default_dispatch = tableswitch_default_dispatch env default_label in
+    let labels = List.map (fun (l,v) -> l) env.tableswitch in
+    let tableswitch_instr = T.Tableswitch(1000, labels, default_label) in
+    let tableswitch = (dispatch_label, tableswitch_instr) in
+    default_dispatch @ tableswitch :: []
+    (* TODO: insert tableswitch *)
+
+  and tableswitch_default_dispatch env label =
+    let d_instr = (Some(label), T.Bipush(-1)) in
+    let return = (None, T.Ireturn) in
+    d_instr :: return :: []
 
   (* store variable in javix *)
   and store_var v b =
