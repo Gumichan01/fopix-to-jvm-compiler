@@ -350,17 +350,34 @@ let rec translate p env : T.t * environment =
     (* FunCall related functions *)
 
     and funcall_prologue env e el =
-      save_vars env e el
+      let f = translate_expr env e in
+      let s = save_vars env e el in
+      let _ = get_return_address env e el in
+      let _ = push_args env e el in
+      f @ s
       (*  Then push return address
           Then push args into stack
           Then Goto F via Calcul Goto Dispatch *)
+
+    and get_return_address env e el =
+      failwith "Students! This is our job (Get/Compute Return Addresses)"
+
+    and push_args env e el =
+      let _ = List.map (fun x -> translate_expr env x) el in
+      failwith "Students! This is our job (Push Args Into Stack)"
 
     (*  It should:
         - pop args from stack into vars
         - execute core code
         - place final result at the top of the stack *)
     and funcall_call env e el =
+      let _ = pop_args env e el in
+      let _ = (None, T.Goto(T.Label("put_label_here"))) in
+      let _ = (None, T.Ireturn) in
       failwith "Students! This is our job (FunCall Call)."
+
+    and pop_args env e el =
+      failwith "Students! This is our job (Pop Args From Stack)"
 
     (*  I do not remember if we should Astore or Bipush variables. 
         If we should Bipush instead, just change store_var by a Bipush. *)
