@@ -115,7 +115,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
       Some(T.BlockSet((translate_simple a), (translate_simple i),
            (translate_simple v)))
 
-    | S.FunCall(_,_) -> None
+    | S.FunCall(_) -> None
 
     | S.Print(s) -> Some(T.Print(s))
 
