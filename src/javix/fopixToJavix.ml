@@ -394,10 +394,12 @@ let rec translate p env : T.t * environment =
     (*  It should: 
         X Swap
         X Restore Vars
-        - Goto Dispatch *)
+        X Goto Dispatch *)
     and funcall_epilogue env e el =
       let r = restore_vars env e el in
-      r @ [(None, T.Swap)]
+      let s = (None, T.Swap) in
+      let g = (None, T.Goto(T.Label("dispatch"))) in
+      r @ s :: g :: []
 
     and restore_vars env e el =
       let rec r_vars_aux env = function
