@@ -51,6 +51,9 @@ let fresh_function_label =
     incr r;
     T.Label (f ^ "_body_" ^ string_of_int !r)
 
+let lookup_tableswitch l env =
+  List.assoc l env.tableswitch
+
 (** Variables *)
 
 (** [bind_variable env x] associates Fopix variable x to the next
