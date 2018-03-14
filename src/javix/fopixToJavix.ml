@@ -209,16 +209,16 @@ let rec translate p env : T.t * environment =
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
+    let _ = (f_label,Labels.encode f_label) :: env.tableswitch in
     insert_fun f_label fi n_code, nenv
 
   and translate_expr env = function
     | S.Num i -> (None, T.Bipush(i))::[]
+
+    (* TODO: Replace the comment by an appropriate instruction *)
     | S.FunName fn ->
-      (*let _ = { nextvar = env.nextvar; variables = env.variables;
-                   function_labels = (fn, T.Label(fn))::env.function_labels;
-                   function_formals = env.function_formals} in
-                   None, T.Comment(";what should I put?")*)
-      failwith "FunName - Students! this is your job!"
+      let _ = lookup_function_label fn env
+      in (None, T.Comment("What to do here? Bipush an Int?")) :: []
 
     | S.Var v ->
       (match (find_variable env v) with
