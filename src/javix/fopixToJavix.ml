@@ -20,6 +20,7 @@ type environment = {
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
   function_formals : (S.function_identifier * S.formals) list;
+  tableswitch      : (T.label * int) list;
   mutable box_nextval: bool ref;
 }
 
@@ -29,6 +30,7 @@ let initial_environment () = {
   variables        = [];
   function_labels  = [];
   function_formals = [];
+  tableswitch      = [];
   box_nextval      = ref true;
 }
 
