@@ -36,7 +36,7 @@ let initial_environment () = {
   box_nextval      = ref true;
 }
 
-let env_opt env enableopt = { env with optimize = true }
+let env_opt env enableopt = { env with optimize = enableopt }
 
 (** [lookup_function_label f env] returns the label of [f] in [env]. *)
 let lookup_function_label f env =
@@ -339,8 +339,17 @@ let rec translate p env : T.t * environment =
       translate_expr env (S.IfThenElse (bcomp, e1, e2))
 
     | S.IfThenElse (cond, e1, e2) ->
-      let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
-      translate_expr env (S.IfThenElse (bcomp, e1, e2))
+      (
+       match env.optimize, cond with
+       | true, S.Num(1) -> translate_expr env e1
+       | true, S.Num(0) -> translate_expr env e2
+       | true, S.BinOp(S.Eq, S.Num(1), S.Num(1)) -> translate_expr env e1
+       | true, S.BinOp(S.Eq, S.Num(1), S.Num(0))
+       | true, S.BinOp(S.Eq, S.Num(0), S.Num(1)) -> translate_expr env e2
+       | _ ->
+         let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
+         translate_expr env (S.IfThenElse (bcomp, e1, e2))
+      )
 
     | S.BinOp(op, e1, e2) ->
       if is_arith op
