@@ -136,7 +136,9 @@ let fresh_iflabel: unit -> T.label * T.label =
       T.Label("endif" ^ "<" ^ string_of_int rr ^ ">") )
   )
 
-
+(*
+  Calculate the maximum number of variables (registers) used by a javix program
+*)
 let calculate_varsize ll : int =
   let rec aux_vsize l acc =
     match l with
@@ -203,7 +205,7 @@ let basic_program code =
 
 let opt_program code =
   let jxprog = basic_program code in
-  (*let opt_code = optimize_code env.T.code in*)
+  let opt_code = optimize_code env.T.code in
   let stsize = calculate_stacksize jxprog.T.code in
   let vsize  = calculate_varsize jxprog.T.code in
   print_string("stacksize: " ^ string_of_int(stsize) ^
