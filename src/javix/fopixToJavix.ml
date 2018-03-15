@@ -136,11 +136,6 @@ let fresh_iflabel: unit -> T.label * T.label =
       T.Label("endif" ^ "<" ^ string_of_int rr ^ ">") )
   )
 
-let basic_program code =
-  { T.classname = "Fopix";
-    T.code = code;
-    T.varsize = 100;
-    T.stacksize = 10000; }
 
 (*
   This naive implementation calculates the size of the stack used
@@ -184,6 +179,13 @@ let calculate_stacksize ll : int =
     | T.If_icmp(_) -> -2
     | _ -> 0
   in aux_st_size ll 0
+
+
+let basic_program code =
+  { T.classname = "Fopix";
+    T.code = code;
+    T.varsize = 100;
+    T.stacksize = (calculate_stacksize code); }
 
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
