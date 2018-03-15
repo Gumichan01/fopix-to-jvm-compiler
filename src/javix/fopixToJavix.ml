@@ -142,6 +142,49 @@ let basic_program code =
     T.varsize = 100;
     T.stacksize = 10000; }
 
+(*
+  This naive implementation calculates the size of the stack used
+  by the javix program.
+
+  Notes:
+
+  1. The calculated size of the stack is not optimal because
+  I just consider each javix instruction independently.
+
+  2. It is possible that the stack has a very big size, in particular in javix code
+  that contains a loot of if-blocks.
+
+  If I have an If_icmp instruction, I can optimize the size of the stack
+  by calculating the maximum stack size consumed by each one on the expressions
+  used in the if-block
+
+  In this example:
+
+    e₁
+    e₂
+    If_icmp ...  // It remove 2 elements from the stack
+    e₃
+    e₄
+
+    I should calculate something like:
+
+    max( stacksize(e1), stacksize(e2) + 1, stacksize(e3), stacksize(e4) )
+
+  *)
+let calculate_stacksize ll : int =
+  let rec aux_st_size l acc =
+    match l with
+    | [] -> acc
+    | (_, ins)::q -> aux_st_size q (acc + aux_st_instruction_size ins)
+
+  and aux_st_instruction_size =
+    function
+    | T.Astore(_) | T.Pop | T.Binop(_) -> -1
+    | T.Aload(_) | T.Bipush(_) -> 1
+    | T.If_icmp(_) -> -2
+    | _ -> 0
+  in aux_st_size ll 0
+
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
@@ -379,7 +422,7 @@ let rec translate p env : T.t * environment =
     and pop_args env e el =
       failwith "Students! This is our job (Pop Args From Stack)"
 
-    (*  I do not remember if we should Astore or Bipush variables. 
+    (*  I do not remember if we should Astore or Bipush variables.
         If we should Bipush instead, just change store_var by a Bipush. *)
     and save_vars env e el =
       let rec save_var_aux env = function
@@ -391,7 +434,7 @@ let rec translate p env : T.t * environment =
         | _::t -> save_var_aux env t
       in List.flatten (save_var_aux env el)
 
-    (*  It should: 
+    (*  It should:
         X Swap
         X Restore Vars
         X Goto Dispatch *)
