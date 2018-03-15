@@ -245,13 +245,15 @@ let opt_program code =
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
   let rec program env defs =
-    let code, env = List.fold_left translate_definition ([],env) defs in
-    let tableswitch = insert_tableswitch env in
-    opt_program (code @ tableswitch @ (translate_exit env)), env
+    let optenv = env_opt env false in (* no optimization by default *)
+    let code, env = List.fold_left translate_definition ([], optenv) defs in
+    let tableswitch = insert_tableswitch optenv in
+    opt_program (code @ tableswitch @ (translate_exit optenv)), optenv
 
   (* proper exit in javix *)
   and translate_exit env =
-    let v = T.Var(env.nextvar -1) in (load_var v true) @ ((None, T.Ireturn) :: [])
+    let v = T.Var(env.nextvar -1) in
+    (load_var v true) @ ((None, T.Ireturn) :: [])
 
   (*  as its name implies, it inserts a tableswitch with all seen labels
       and a default label that should return -1 *)
