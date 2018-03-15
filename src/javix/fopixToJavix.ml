@@ -21,6 +21,7 @@ type environment = {
       and their formal arguments. *)
   function_formals : (S.function_identifier * S.formals) list;
   tableswitch      : (T.label * int) list;
+  optimize         : bool;
   mutable box_nextval: bool ref;
 }
 
@@ -31,8 +32,11 @@ let initial_environment () = {
   function_labels  = [];
   function_formals = [];
   tableswitch      = [];
+  optimize         = false;
   box_nextval      = ref true;
 }
+
+let env_opt env enableopt = { env with optimize = true }
 
 (** [lookup_function_label f env] returns the label of [f] in [env]. *)
 let lookup_function_label f env =
@@ -202,9 +206,9 @@ let calculate_stacksize ll : int =
   Optimize the generated source code (Javix)
 
   1 - Box/Unbox and Unbox/Box on a variable that is in the stack is useless
-
+  2 - Aload followed by Astore is useless
 *)
-let optimize_code code =
+let optimize_javix code =
   let rec aux_opt lcode optcode =
     match lcode with
     | [] -> optcode
@@ -220,11 +224,15 @@ let basic_program code =
   { T.classname = "Fopix";
     T.code = code;
     T.varsize = 100;
-    T.stacksize = 1024; }
+    T.stacksize = 10000; }
 
+(*
+  Generate a basic javix program that is slightly optimized and has calculated
+  the maximum stack size and the maximum number of variables
+  *)
 let opt_program code =
   let jxprog   = basic_program code in
-  let opt_code = optimize_code code in
+  let opt_code = optimize_javix code in
   let stsize   = calculate_stacksize jxprog.T.code in
   let vsize    = calculate_varsize jxprog.T.code   in
   print_string("stacksize: " ^ string_of_int(stsize) ^
