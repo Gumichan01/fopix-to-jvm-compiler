@@ -15,9 +15,11 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   let ldeflist, fdeflist = retrieve_definitions p in
   (* Just to test *)
   print_string("hello "^ string_of_int(List.length ldeflist) ^" - "
-               ^ string_of_int(List.length fdeflist)); print_endline("");
-               (([], (translate_defs env ldeflist) ), env)
-               (*(([], T.TContCall(T.Print("exit")) ), env)*)
+               ^ string_of_int(List.length fdeflist));
+  print_endline("");
+  let compiled_defs  = translate_defs env ldeflist in
+  let compiled_funcs = translate_funs env fdeflist in
+  ((compiled_funcs, compiled_defs), env)
 
   and retrieve_definitions p =
     let rec aux_retrieve p (defl, funcl) =
