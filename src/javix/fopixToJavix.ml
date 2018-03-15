@@ -137,6 +137,19 @@ let fresh_iflabel: unit -> T.label * T.label =
   )
 
 
+let calculate_varsize ll : int =
+  let rec aux_vsize l acc =
+    match l with
+    | [] -> acc
+    | (_, ins)::q -> aux_vsize q (acc + aux_vinstruction_size ins)
+
+  and aux_vinstruction_size =
+    function
+    | T.Astore(_) -> 1
+    | _ -> 0
+  in aux_vsize ll 0
+
+
 (*
   This naive implementation calculates the size of the stack used
   by the javix program.
@@ -180,12 +193,24 @@ let calculate_stacksize ll : int =
     | _ -> 0
   in aux_st_size ll 0
 
+(* TODO optimize the source code *)
 
 let basic_program code =
   { T.classname = "Fopix";
     T.code = code;
     T.varsize = 100;
-    T.stacksize = (calculate_stacksize code); }
+    T.stacksize = 1024; }
+
+let opt_program code =
+  let jxprog = basic_program code in
+  (*let opt_code = optimize_code env.T.code in*)
+  let stsize = calculate_stacksize jxprog.T.code in
+  let vsize  = calculate_varsize jxprog.T.code in
+  print_string("stacksize: " ^ string_of_int(stsize) ^
+               "\nvsize: " ^ string_of_int(vsize) ^ "\n");
+  {
+      jxprog with T.varsize = vsize; T.stacksize = stsize;
+  }
 
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
@@ -193,7 +218,7 @@ let rec translate p env : T.t * environment =
   let rec program env defs =
     let code, env = List.fold_left translate_definition ([],env) defs in
     let tableswitch = insert_tableswitch env in
-    basic_program (code @ tableswitch @ (translate_exit env)), env
+    opt_program (code @ tableswitch @ (translate_exit env)), env
 
   (* proper exit in javix *)
   and translate_exit env =
