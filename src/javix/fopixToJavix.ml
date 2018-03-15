@@ -197,6 +197,25 @@ let calculate_stacksize ll : int =
 
 (* TODO optimize the source code *)
 
+(*
+
+  Optimize the generated source code (Javix)
+
+  1 - Box/Unbox and Unbox/Box on a variable that is in the stack is useless
+
+*)
+let optimize_code code =
+  let rec aux_opt lcode optcode =
+    match lcode with
+    | [] -> optcode
+
+    | (_, T.Aload(_))::(_, T.Astore(_))::q
+    | (_, T.Box)::(_, T.Unbox)::q
+    | (_, T.Unbox)::(_, T.Box)::q -> aux_opt q optcode
+
+    | h::q -> aux_opt q (optcode @ [h])
+  in aux_opt code []
+
 let basic_program code =
   { T.classname = "Fopix";
     T.code = code;
@@ -204,14 +223,14 @@ let basic_program code =
     T.stacksize = 1024; }
 
 let opt_program code =
-  let jxprog = basic_program code in
-  let opt_code = optimize_code env.T.code in
-  let stsize = calculate_stacksize jxprog.T.code in
-  let vsize  = calculate_varsize jxprog.T.code in
+  let jxprog   = basic_program code in
+  let opt_code = optimize_code code in
+  let stsize   = calculate_stacksize jxprog.T.code in
+  let vsize    = calculate_varsize jxprog.T.code   in
   print_string("stacksize: " ^ string_of_int(stsize) ^
                "\nvsize: " ^ string_of_int(vsize) ^ "\n");
   {
-      jxprog with T.varsize = vsize; T.stacksize = stsize;
+      jxprog with T.code = opt_code; T.varsize = vsize; T.stacksize = stsize;
   }
 
 (** [translate p env] turns a Fopix program [p] into a Javix program
