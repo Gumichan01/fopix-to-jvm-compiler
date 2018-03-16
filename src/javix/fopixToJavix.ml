@@ -245,7 +245,7 @@ let opt_program code =
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
   let rec program env defs =
-    let optenv = env_opt env true in (* no optimization by default *)
+    let optenv = env_opt env false in (* no optimization by default *)
     let code, env = List.fold_left translate_definition ([], optenv) defs in
     let tableswitch = insert_tableswitch optenv in
     opt_program (code @ tableswitch @ (translate_exit optenv)), optenv
@@ -327,8 +327,13 @@ let rec translate p env : T.t * environment =
       | None -> failwith "No Javix variable binded to this Fopix var")
 
     | S.Let (i, e1, e2) ->
-      let code, nenv = translate_definition ([], env) (S.DefVal(i,e1)) in
-      code @ (translate_expr nenv e2)
+      (
+       match env.optimize, i, e2 with
+       | true, s1, S.Var(s2) when s1 == s2 -> translate_expr env e1
+       | _ ->
+         let code, nenv = translate_definition ([], env) (S.DefVal(i,e1)) in
+         code @ (translate_expr nenv e2)
+      )
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
       let terms  = translate_expr env a1 @ translate_expr env a2 in
