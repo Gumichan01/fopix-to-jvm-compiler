@@ -245,7 +245,7 @@ let opt_program code =
     using [env] to retrieve contextual information. *)
 let rec translate p env : T.t * environment =
   let rec program env defs =
-    let optenv = env_opt env false in (* no optimization by default *)
+    let optenv = env_opt env true in (* no optimization by default *)
     let code, env = List.fold_left translate_definition ([], optenv) defs in
     let tableswitch = insert_tableswitch optenv in
     opt_program (code @ tableswitch @ (translate_exit optenv)), optenv
@@ -400,9 +400,30 @@ let rec translate p env : T.t * environment =
       pre-condition: op is an arithmetic operator
     *)
     and generate_arith env (op, e1, e2) =
-      let c1 = translate_expr env e1 in
-      let c2 = translate_expr env e2 in
-      c1 @ c2 @ (translate_op env op)
+      match env.optimize, e1, e2 with
+      | true, S.Num(x), S.Num(y)  ->
+        translate_expr env (S.Num(fwd_operate_artih x y op))
+      | _ ->
+        let c1 = translate_expr env e1 in
+        let c2 = translate_expr env e2 in
+        c1 @ c2 @ (translate_op env op)
+
+    (* Forward calculation (optimization) *)
+    and fwd_operate_artih x y = function
+      | S.Add -> x + y
+      | S.Sub -> x - y
+      | S.Mul -> x * y
+      | S.Div -> x / y
+      | S.Mod -> x mod y
+      | _ -> assert(false) (* comparison *)
+
+    and fwd_operate_cmp x y = function
+      | S.Eq -> x == y
+      | S.Le -> x <= y
+      | S.Lt -> x < y
+      | S.Ge -> x >= y
+      | S.Gt -> x > y
+      | _ -> assert(false) (* comparison *)
 
     (*
       pre-condition: op is an arithmetic operator
@@ -429,8 +450,13 @@ let rec translate p env : T.t * environment =
       pre-condition: op is a comparison operator
     *)
     and generate_comp env (op, e1, e2) =
-      let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
-      translate_expr env if_comp
+      match env.optimize, e1, e2 with
+      | true, S.Num(x), S.Num(y) ->
+        let z = match (fwd_operate_cmp x y op) with true -> 1 | false -> 0 in
+        translate_expr env (S.Num(z))
+      | _ ->
+        let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
+        translate_expr env if_comp
 
     (* Functions related to IfThenElse*)
 
