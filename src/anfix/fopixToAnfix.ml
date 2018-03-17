@@ -28,6 +28,10 @@ and simplexpr : S.expression -> T.simplexpr = function
   | e -> failwith ("This expression should be simple:" ^
                      FopixPrettyPrinter.(to_string expression e))
 
+and is_simple : S.expression -> bool = function
+  | S.Num _ | S.FunName _ | S.Var _ -> true
+  | e -> false
+
 and expr : S.expression -> T.expression = function
   | S.Num n -> T.Simple (T.Num n)
   | S.FunName f -> T.Simple (T.FunName f)
