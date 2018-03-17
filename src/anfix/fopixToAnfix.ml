@@ -36,6 +36,11 @@ and is_simple : S.expression -> bool = function
   | S.Num _ | S.FunName _ | S.Var _ -> true
   | e -> false
 
+and are_all_simple = function
+  | [] -> true
+  | e::q when (is_simple e) -> are_all_simple q
+  | _ -> false
+
 and expr : S.expression -> T.expression = function
   | S.Num n -> T.Simple (T.Num n)
   | S.FunName f -> T.Simple (T.FunName f)
@@ -45,7 +50,7 @@ and expr : S.expression -> T.expression = function
   | S.BinOp (b,e1,e2) -> expr_binop (b, e1, e2)
   | S.BlockNew e -> expr_blocknew e
   | S.BlockGet (e1,e2) -> expr_blockget (e1, e2)
-  | S.BlockSet (e1,e2,e3) -> T.BlockSet (simplexpr e1, simplexpr e2, simplexpr e3)
+  | S.BlockSet (e1,e2,e3) -> expr_blockset (e1, e2, e3)
   | S.FunCall (e,el) -> T.FunCall (simplexpr e, List.map simplexpr el)
   | S.Print s -> T.Print s
 
@@ -96,3 +101,16 @@ and expr_blockget (e1, e2) =
     let s1, t1 = fresh_variable "anfix" in
     let s2, t2 = fresh_variable "anfix" in
     expr ( S.Let (s1, e1, S.Let(s2, t2, S.BlockGet(t1, t2))) )
+
+and expr_blockset (e1, e2, e3) =
+  let l = e1 :: e2 :: e3 :: [] in
+  match l with
+  | [] -> assert(false) (* S.BlockSet(e1,e2,e3) *)
+  | _ as l ->
+    match are_all_simple l with
+    | true -> T.BlockSet (simplexpr e1, simplexpr e2, simplexpr e3)
+    | false ->
+      let s1, t1 = fresh_variable "anfix" in
+      let s2, t2 = fresh_variable "anfix" in
+      let s3, t3 = fresh_variable "anfix" in
+      expr ( S.Let(s1, e1, S.Let( s2, t2, S.Let(s3, e3, S.BlockSet(t1, t2, t3)))) )
