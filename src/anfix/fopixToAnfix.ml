@@ -44,7 +44,7 @@ and expr : S.expression -> T.expression = function
   | S.IfThenElse (e1,e2,e3) -> expr_if (e1, e2, e3)
   | S.BinOp (b,e1,e2) -> expr_binop (b, e1, e2)
   | S.BlockNew e -> expr_blocknew e
-  | S.BlockGet (e1,e2) -> T.BlockGet (simplexpr e1, simplexpr e2)
+  | S.BlockGet (e1,e2) -> expr_blockget (e1, e2)
   | S.BlockSet (e1,e2,e3) -> T.BlockSet (simplexpr e1, simplexpr e2, simplexpr e3)
   | S.FunCall (e,el) -> T.FunCall (simplexpr e, List.map simplexpr el)
   | S.Print s -> T.Print s
@@ -79,3 +79,20 @@ and expr_blocknew e =
   | false ->
     let s, bn = fresh_variable "anfix" in
     expr ( S.Let (s, e, S.BlockNew(bn) ) )
+
+and expr_blockget (e1, e2) =
+  match is_simple e1, is_simple e2 with
+  | true, true -> T.BlockGet (simplexpr e1, simplexpr e2)
+
+  | false, true ->
+    let s, t = fresh_variable "anfix" in
+    expr ( S.Let(s, e1, S.BlockGet(t, e2)) )
+
+  | true, false ->
+    let s, t = fresh_variable "anfix" in
+    expr ( S.Let(s, e1, S.BlockGet(e1, t)) )
+
+  | _ ->
+    let s1, t1 = fresh_variable "anfix" in
+    let s2, t2 = fresh_variable "anfix" in
+    expr ( S.Let (s1, e1, S.Let(s2, t2, S.BlockGet(t1, t2))) )
