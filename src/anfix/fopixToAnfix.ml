@@ -43,7 +43,7 @@ and expr : S.expression -> T.expression = function
   | S.Let (x,e1,e2) -> T.Let (x, expr e1, expr e2)
   | S.IfThenElse (e1,e2,e3) -> expr_if (e1, e2, e3)
   | S.BinOp (b,e1,e2) -> expr_binop (b, e1, e2)
-  | S.BlockNew e -> T.BlockNew (simplexpr e)
+  | S.BlockNew e -> expr_blocknew e
   | S.BlockGet (e1,e2) -> T.BlockGet (simplexpr e1, simplexpr e2)
   | S.BlockSet (e1,e2,e3) -> T.BlockSet (simplexpr e1, simplexpr e2, simplexpr e3)
   | S.FunCall (e,el) -> T.FunCall (simplexpr e, List.map simplexpr el)
@@ -72,3 +72,10 @@ and expr_binop (b, e1, e2) =
     let s1, t1 = fresh_variable "anfix" in
     let s2, t2 = fresh_variable "anfix" in
     expr ( S.Let (s1, e1, S.Let(s2, t2, S.BinOp(b, t1, t2))) )
+
+and expr_blocknew e =
+  match is_simple e with
+  | true  -> T.BlockNew (simplexpr e)
+  | false ->
+    let s, bn = fresh_variable "anfix" in
+    expr ( S.Let (s, e, S.BlockNew(bn) ) )
