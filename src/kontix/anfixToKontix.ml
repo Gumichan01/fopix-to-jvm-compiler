@@ -42,7 +42,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     | S.DefVal(i, e)::q ->
       (match (translate_expr_tobasic env e) with
       | Some(te) -> T.TLet(i, te, (translate_defs env q))
-      | None -> failwith "translate_defs")
+      | None -> failwith "translate_defs: funcall")
 
     | _ -> assert(false) (* pre-condition : list of S.DefVal *)
 
