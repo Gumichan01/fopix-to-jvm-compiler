@@ -11,25 +11,25 @@ val z = x + y
 val b = (1 = 1)
 
 val bt = if 1 = 1 then 1 else 2
-val bf = if 1 = 0 then 1 else 2
+val bf = if 42 - 1 + 2 + 3 - 4 then 1 else 2
 
-val bo = if 1 then 1 else 2
 val a = 42
-val bo = if a then 1 else 2
+val bta = if a then 1 else 2
 
 
 val z = 13
 val bimp = if z = 13 then (if 1 = 1 then (if 1 = 10 then 1 else 30) else 20) else 0
+
+/*
+def fact(x) = if x = 0 then 1 else x * fact(x-1)
+val res = fact(10)
 */
-
-/*def fact(x) = if x = 0 then 1 else x * fact(x-1)
-val res = fact(10)*/
-
 /*
     @TODO
     Functions
 */
-/* def f(x,y) = x + y */
-/* val a = f(1, 2) */
-
+/*
+def f(x,y,z) = x + y + z
+val a = f(1, 2 * 5, 3 + fact(10))
+*/
 /* + other instructions not compiled yet (see fopixToJavix.ml) */
