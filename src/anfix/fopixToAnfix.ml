@@ -15,6 +15,10 @@ let initial_environment () = ()
 
 type defs = (T.identifier * T.expression) list
 
+let fresh_variable =
+  let r = ref 0 in
+  fun str -> incr r; let s = str ^ (string_of_int !r) in (s, S.Var(s))
+
 let rec program l = List.map definition l
 
 and definition = function
@@ -37,10 +41,34 @@ and expr : S.expression -> T.expression = function
   | S.FunName f -> T.Simple (T.FunName f)
   | S.Var x -> T.Simple (T.Var x)
   | S.Let (x,e1,e2) -> T.Let (x, expr e1, expr e2)
-  | S.IfThenElse (e1,e2,e3) -> T.IfThenElse (simplexpr e1, expr e2, expr e3)
-  | S.BinOp (b,e1,e2) -> T.BinOp (b, simplexpr e1, simplexpr e2)
+  | S.IfThenElse (e1,e2,e3) -> expr_if (e1, e2, e3)
+  | S.BinOp (b,e1,e2) -> expr_binop (b, e1, e2)
   | S.BlockNew e -> T.BlockNew (simplexpr e)
   | S.BlockGet (e1,e2) -> T.BlockGet (simplexpr e1, simplexpr e2)
-  | S.BlockSet (e1,e2,e3) -> T.BlockSet (simplexpr e1,simplexpr e2,simplexpr e3)
+  | S.BlockSet (e1,e2,e3) -> T.BlockSet (simplexpr e1, simplexpr e2, simplexpr e3)
   | S.FunCall (e,el) -> T.FunCall (simplexpr e, List.map simplexpr el)
   | S.Print s -> T.Print s
+
+and expr_if (e1, e2, e3) =
+  match is_simple e1 with
+  | true  -> T.IfThenElse (simplexpr e1, expr e2, expr e3)
+  | false ->
+    let s, ifx = fresh_variable "anfix" in
+    expr ( S.Let (s, e1, S.IfThenElse(ifx, e2, e3) ) )
+
+and expr_binop (b, e1, e2) =
+  match is_simple e1, is_simple e2 with
+  | true, true -> T.BinOp (b, simplexpr e1, simplexpr e2)
+
+  | false, true ->
+    let s, t = fresh_variable "anfix" in
+    expr ( S.Let(s, e1, S.BinOp(b, t, e2)) )
+
+  | true, false ->
+    let s, t = fresh_variable "anfix" in
+    expr ( S.Let(s, e2, S.BinOp(b, e1, t)) )
+
+  | _ ->
+    let s1, t1 = fresh_variable "anfix" in
+    let s2, t2 = fresh_variable "anfix" in
+    expr ( S.Let (s1, e1, S.Let(s2, t2, S.BinOp(b, t1, t2))) )
