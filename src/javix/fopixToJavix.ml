@@ -336,8 +336,19 @@ let rec translate p env : T.t * environment =
       )
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
-      let terms  = translate_expr env a1 @ translate_expr env a2 in
-      translate_if env (translate_cmp op) terms e1 e2
+      (
+       match env.optimize, op, a1, a2 with
+       | true, S.Eq, S.Num(1), S.Num(1)
+       | true, S.Eq, S.Num(0), S.Num(0) -> translate_expr env e1
+       | true, S.Eq, S.Num(1), S.Num(0)
+       | true, S.Eq, S.Num(0), S.Num(1)
+       | true, S.Eq, S.Num(1), S.Num(_)
+       | true, S.Eq, S.Num(_), S.Num(1) -> translate_expr env e2
+       | _ ->
+         let terms  = translate_expr env a1 @ translate_expr env a2 in
+         translate_if env (translate_cmp op) terms e1 e2
+      )
+
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
       let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
@@ -348,9 +359,6 @@ let rec translate p env : T.t * environment =
        match env.optimize, cond with
        | true, S.Num(1) -> translate_expr env e1
        | true, S.Num(0) -> translate_expr env e2
-       | true, S.BinOp(S.Eq, S.Num(1), S.Num(1)) -> translate_expr env e1
-       | true, S.BinOp(S.Eq, S.Num(1), S.Num(0))
-       | true, S.BinOp(S.Eq, S.Num(0), S.Num(1)) -> translate_expr env e2
        | _ ->
          let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
          translate_expr env (S.IfThenElse (bcomp, e1, e2))
