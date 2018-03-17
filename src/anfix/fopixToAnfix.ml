@@ -5,7 +5,6 @@
     are simple). This is used for parsing Anfix without defining
     a full parser (but reusing Fopix parser instead) *)
 
-(** TODO: extend this code into a full Fopix to Anfix converter *)
 
 module S=FopixAST
 module T=AnfixAST
@@ -51,7 +50,7 @@ and expr : S.expression -> T.expression = function
   | S.BlockNew e -> expr_blocknew e
   | S.BlockGet (e1,e2) -> expr_blockget (e1, e2)
   | S.BlockSet (e1,e2,e3) -> expr_blockset (e1, e2, e3)
-  | S.FunCall (e,el) -> T.FunCall (simplexpr e, List.map simplexpr el)
+  | S.FunCall (e,el) -> expr_funcall (e, el)
   | S.Print s -> T.Print s
 
 and expr_if (e1, e2, e3) =
@@ -114,3 +113,19 @@ and expr_blockset (e1, e2, e3) =
       let s2, t2 = fresh_variable "anfix" in
       let s3, t3 = fresh_variable "anfix" in
       expr ( S.Let(s1, e1, S.Let( s2, t2, S.Let(s3, e3, S.BlockSet(t1, t2, t3)))) )
+
+and expr_funcall (e, el) =
+  match is_simple e, are_all_simple el with
+  | true, true  -> T.FunCall (simplexpr e, List.map simplexpr el)
+  | false, _ ->
+    let s, t = fresh_variable "anfix_fun" in
+    expr ( S.Let(s, e, S.FunCall(t, el)) )
+  | true, _ -> expr ( expr_funcall_aux_bis e el )
+
+and expr_funcall_aux_bis e l =
+  let rec funcall_aux argv = function
+  | [] -> S.FunCall(e, argv)
+  | ex::q ->
+    let s, svar = fresh_variable "anfix_argv" in
+    S.Let(s, ex, (funcall_aux (argv @ [svar]) q) )
+  in funcall_aux [] l
