@@ -166,6 +166,19 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
   | S.TFunCall(bexpr, bl) -> failwith "TODO"
   | S.TContCall(bexpr) -> failwith "TODO"
 
-  and translate_basicexpr env = failwith "TODO translate basic"
+  and translate_basicexpr env = function
+  | S.Num(x) -> (None, T.Bipush(x))::[]
+
+  | S.FunName fn -> failwith "TODO FunName"
+
+  | S.Var v ->
+    (match (find_variable env v) with
+    | Some(jv, bv) -> load_var jv bv
+    | None -> failwith "No Javix variable binded to this Fopix var")
+
+  | S.Let(i, bexpr1, bexpr2) -> failwith "What should I do?"
+
+  | _ -> failwith "WHAT?!!"
+
 
 (* --- *)
