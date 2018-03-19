@@ -4,7 +4,6 @@
     from Fopix To Javix
 */
 
-/*
 val x = 10
 val y = 1 + 2
 val z = x + y
