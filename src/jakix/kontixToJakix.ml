@@ -159,7 +159,12 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     let _ = (f_label,Labels.encode f_label) :: env.tableswitch in
     insert_fun f_label fi n_code, nenv
 
-  and translate_tailexpr env = failwith "TODO translate tail"
+  and translate_tailexpr env = function
+  | S.TLet(i, bexpr, texpr) -> failwith "TODO"
+  | S.TIfThenElse(bexpr, texpr1, texpr2) -> failwith "TODO"
+  | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
+  | S.TFunCall(bexpr, bl) -> failwith "TODO"
+  | S.TContCall(bexpr) -> failwith "TODO"
 
   and translate_basicexpr env = failwith "TODO translate basic"
 
