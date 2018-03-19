@@ -142,23 +142,25 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
 
   and translate_definition (o_code, env) = function
   | S.DefFun (fi, fo, e) -> def_fun fi fo e env
-  | S.DefCont (fi, fe, i, tail) -> failwith "TODO: "
+  | S.DefCont (fi, fe, i, tail) -> def_cont (o_code, env) fi fe i tail
 
-  and def_val (o_code, env) (i, e) =
-    let n_code = translate_expr env e in
+  and def_cont (o_code, env) fi fe i texpr =
+    let n_code = translate_tailexpr env texpr in
     let v, b, nenv = bind_variable env i !(env.box_nextval) in
     let _ = env_set_flag nenv true in
     let vstore = store_var v b in
     o_code @ n_code @ vstore, nenv
 
-  and def_fun fi fo e env =
-    let n_code = translate_expr env e in
+  and def_fun fi fo texpr env =
+    let n_code = translate_tailexpr env texpr in
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
     let _ = (f_label,Labels.encode f_label) :: env.tableswitch in
     insert_fun f_label fi n_code, nenv
 
-  and translate_expr env = failwith "TODO translate"
+  and translate_tailexpr env = failwith "TODO translate tail"
+
+  and translate_basicexpr env = failwith "TODO translate basic"
 
 (* --- *)
