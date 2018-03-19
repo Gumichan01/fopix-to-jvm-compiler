@@ -199,7 +199,6 @@ let calculate_stacksize ll : int =
     | _ -> 0
   in aux_st_size ll 0
 
-(* TODO optimize the source code *)
 
 (*
 
@@ -243,7 +242,7 @@ let opt_program code =
 
 (** [translate p env] turns a Fopix program [p] into a Javix program
     using [env] to retrieve contextual information. *)
-let rec translate p env : T.t * environment =
+let translate p env : T.t * environment =
   let rec program env defs =
     let optenv = env_opt env false in (* no optimization by default *)
     let code, env = List.fold_left translate_definition ([], optenv) defs in
