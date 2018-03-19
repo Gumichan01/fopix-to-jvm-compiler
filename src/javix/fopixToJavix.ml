@@ -348,7 +348,6 @@ let translate p env : T.t * environment =
          translate_if env (translate_cmp op) terms e1 e2
       )
 
-
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
       let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
       translate_expr env (S.IfThenElse (bcomp, e1, e2))
