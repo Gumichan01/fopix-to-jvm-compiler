@@ -198,9 +198,9 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
       translate_tailexpr env ( S.TIfThenElse(bcomp, te1, te2) )
 
-    | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
-    | S.TFunCall(bexpr, bl) -> failwith "TODO"
-    | S.TContCall(bexpr) -> failwith "TODO"
+    | S.TPushCont(fi, idl, texpr) -> failwith "TODO PushCont"
+    | S.TFunCall(bexpr, bl) -> failwith "TODO FunCall"
+    | S.TContCall(bexpr) -> translate_basicexpr env bexpr
 
   and translate_basicexpr env = function
     | S.Num(x) -> (None, T.Bipush(x))::[]
