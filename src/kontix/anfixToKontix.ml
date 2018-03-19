@@ -67,7 +67,11 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
 
     | S.Let(id, e1, e2) ->
       (match translate_expr_tobasic env e1 with
-      | Some(e) -> T.TLet(id, e, (translate_expr env e2))
+      | Some(bexpr1) ->
+        (match translate_expr_tobasic env e2 with
+         | Some(bexpr2) -> T.TContCall(T.Let(id, bexpr1, bexpr2))
+         | None -> T.TLet(id, bexpr1, (translate_expr env e2))
+        )
       | None -> failwith "TODO: FunCall in Let")
 
     | S.IfThenElse(c, e1, e2) ->
