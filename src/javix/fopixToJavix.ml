@@ -245,9 +245,9 @@ let opt_program code =
 let translate p env : T.t * environment =
   let rec program env defs =
     let optenv = env_opt env false in (* no optimization by default *)
-    let code, env = List.fold_left translate_definition ([], optenv) defs in
+    let code, nenv = List.fold_left translate_definition ([], optenv) defs in
     let tableswitch = insert_tableswitch optenv in
-    opt_program (code @ tableswitch @ (translate_exit optenv)), optenv
+    opt_program (code @ (translate_exit nenv) @ tableswitch), nenv
 
   (* proper exit in javix *)
   and translate_exit env =
