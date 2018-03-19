@@ -210,7 +210,26 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       then generate_arith env (op, e1, e2)
       else generate_comp env (op, e1, e2)
 
-    | _ -> failwith "WHAT?!!"
+    | S.BlockNew e ->
+      let b = translate_basicexpr env e in
+      let _ = env_set_flag env false in
+      b @ (None, T.Comment "Creating block") :: (None, T.Anewarray) :: []
+
+    | S.BlockGet (e1,e2) ->
+      let b = translate_basicexpr env e1 in
+      let i = translate_basicexpr env e2 in
+      b @ i @ (None, T.Comment "Getting from block") :: (None, T.AAload) :: []
+
+    | S.BlockSet (e1,e2,e3) ->
+      let b = translate_basicexpr env e1 in
+      let i = translate_basicexpr env e2 in
+      let v = translate_basicexpr env e3 in
+      (* Adding a T.Bipush(0) as a return value for the S.DefVal *)
+      b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.AAstore) ::
+      (None, T.Bipush(0)) :: []
+
+    | S.Print s -> (None, T.Print(s)) :: []
+
 
     (* Functions related to Binary operations *)
     (* Check if an operator is arithmetic - '+', '-', '*', '/', ... *)
