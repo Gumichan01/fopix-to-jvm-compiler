@@ -113,6 +113,21 @@ module Labels :
  end
 
 
+ (*
+   Generate labels for if-then-else instruction
+   Creates two fresh labels, then<n>, endif<n> n ∈ [ 0 , +∞ [
+
+ *)
+ let fresh_iflabel: unit -> T.label * T.label =
+   let r = ref 0 in
+   (fun _ ->
+     incr r;
+     let rr = !r in
+     ( T.Label("then" ^ "<" ^ string_of_int rr ^ ">"),
+       T.Label("endif" ^ "<" ^ string_of_int rr ^ ">") )
+   )
+
+
 let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
   let rec program env defs =
     let code, env = List.fold_left translate_definition ([], env) defs in
@@ -160,25 +175,66 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     insert_fun f_label fi n_code, nenv
 
   and translate_tailexpr env = function
-  | S.TLet(i, bexpr, texpr) -> failwith "TODO"
-  | S.TIfThenElse(bexpr, texpr1, texpr2) -> failwith "TODO"
-  | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
-  | S.TFunCall(bexpr, bl) -> failwith "TODO"
-  | S.TContCall(bexpr) -> failwith "TODO"
+    | S.TLet(i, bexpr, texpr) -> failwith "TODO"
+    | S.TIfThenElse(bexpr, texpr1, texpr2) -> failwith "TODO"
+    | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
+    | S.TFunCall(bexpr, bl) -> failwith "TODO"
+    | S.TContCall(bexpr) -> failwith "TODO"
 
   and translate_basicexpr env = function
-  | S.Num(x) -> (None, T.Bipush(x))::[]
+    | S.Num(x) -> (None, T.Bipush(x))::[]
 
-  | S.FunName fn -> failwith "TODO FunName"
+    | S.FunName fn -> failwith "TODO FunName"
 
-  | S.Var v ->
-    (match (find_variable env v) with
-    | Some(jv, bv) -> load_var jv bv
-    | None -> failwith "No Javix variable binded to this Fopix var")
+    | S.Var v ->
+      (match (find_variable env v) with
+       | Some(jv, bv) -> load_var jv bv
+       | None -> failwith "No Javix variable binded to this Fopix var")
 
-  | S.Let(i, bexpr1, bexpr2) -> failwith "What should I do?"
+    | S.Let(i, bexpr1, bexpr2) -> failwith "What should I do?"
 
-  | _ -> failwith "WHAT?!!"
+    | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
+      let terms  = translate_basicexpr env a1 @ translate_basicexpr env a2 in
+      translate_if env (translate_cmp op) terms e1 e2
 
+    | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
+      let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
+      translate_basicexpr env ( S.IfThenElse(bcomp, e1, e2) )
+
+    | S.IfThenElse (cond, e1, e2) ->
+      let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
+      translate_basicexpr env ( S.IfThenElse(bcomp, e1, e2) )
+
+    | _ -> failwith "WHAT?!!"
+
+    (* Functions related to Binary operations *)
+    (* Check if an operator is arithmetic - '+', '-', '*', '/', ... *)
+    and is_arith =
+      function
+      | S.Add | S.Sub | S.Mul | S.Div | S.Mod -> true
+      | _ -> false
+
+    and translate_if env ifcomp terms e1 e2 =
+      let ethen  = translate_basicexpr env e1 in
+      let eelse  = translate_basicexpr env e2 in
+      let thlab, endlab = fresh_iflabel () in
+      terms @ [(None, T.If_icmp(ifcomp, thlab))] @ eelse @
+      [(None, T.Goto(endlab))] @ label_if thlab ethen @
+      [Some(endlab), T.Comment("endif")]
+
+    and label_if labelif =
+      function
+      | (None, i)::q -> (Some(labelif), i)::q
+      | (Some(_), _)::_ as l -> l
+      | [] -> assert false (* I cannot get an empty then-block or else-block *)
+
+    and translate_cmp =
+      function
+      | S.Eq -> T.Eq
+      | S.Le -> T.Le
+      | S.Lt -> T.Lt
+      | S.Ge -> T.Ge
+      | S.Gt -> T.Gt
+      | _ -> failwith "Binop: invalid operation"
 
 (* --- *)
