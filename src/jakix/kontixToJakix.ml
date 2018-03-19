@@ -186,7 +186,18 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       let ncode, nenv = def_val ([], env) (i, bexpr) in
       ncode @ (translate_tailexpr env texpr)
 
-    | S.TIfThenElse(bexpr, texpr1, texpr2) -> failwith "TODO"
+    | S.TIfThenElse (S.BinOp(op, a1, a2), te1, te2) when is_arith op = false ->
+      let terms  = translate_basicexpr env a1 @ translate_basicexpr env a2 in
+      translate_tail_if env (translate_cmp op) terms te1 te2
+
+    | S.TIfThenElse (S.BinOp(op, a1, a2), te1, te2) ->
+      let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
+      translate_tailexpr env ( S.TIfThenElse(bcomp, te1, te2) )
+
+    | S.TIfThenElse (cond, te1, te2) ->
+      let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
+      translate_tailexpr env ( S.TIfThenElse(bcomp, te1, te2) )
+
     | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
     | S.TFunCall(bexpr, bl) -> failwith "TODO"
     | S.TContCall(bexpr) -> failwith "TODO"
@@ -205,7 +216,7 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
       let terms  = translate_basicexpr env a1 @ translate_basicexpr env a2 in
-      translate_if env (translate_cmp op) terms e1 e2
+      translate_basic_if env (translate_cmp op) terms e1 e2
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) ->
       let bcomp = S.BinOp(S.Eq, S.BinOp(op, a1, a2), S.Num(1)) in
@@ -248,9 +259,17 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       | S.Add | S.Sub | S.Mul | S.Div | S.Mod -> true
       | _ -> false
 
-    and translate_if env ifcomp terms e1 e2 =
+    and translate_basic_if env ifcomp terms e1 e2 =
       let ethen  = translate_basicexpr env e1 in
       let eelse  = translate_basicexpr env e2 in
+      translate_if_aux env ifcomp terms ethen eelse
+
+    and translate_tail_if env ifcomp terms e1 e2 =
+      let ethen  = translate_tailexpr env e1 in
+      let eelse  = translate_tailexpr env e2 in
+      translate_if_aux env ifcomp terms ethen eelse
+
+    and translate_if_aux env ifcomp terms ethen eelse =
       let thlab, endlab = fresh_iflabel () in
       terms @ [(None, T.If_icmp(ifcomp, thlab))] @ eelse @
       [(None, T.Goto(endlab))] @ label_if thlab ethen @
