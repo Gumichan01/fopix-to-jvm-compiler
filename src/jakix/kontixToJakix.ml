@@ -184,7 +184,7 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
   and translate_basicexpr env = function
     | S.Num(x) -> (None, T.Bipush(x))::[]
 
-    | S.FunName fn -> failwith "TODO FunName"
+    | S.FunName fn -> failwith "FunName: What should I do?"
 
     | S.Var v ->
       (match (find_variable env v) with
