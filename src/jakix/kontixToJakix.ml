@@ -166,6 +166,13 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     let vstore = store_var v b in
     o_code @ n_code @ vstore, nenv
 
+  and def_val (o_code, env) (i, e) =
+    let n_code = translate_basicexpr env e in
+    let v, b, nenv = bind_variable env i !(env.box_nextval) in
+    let _ = env_set_flag nenv true in
+    let vstore = store_var v b in
+    o_code @ n_code @ vstore, nenv
+
   and def_fun fi fo texpr env =
     let n_code = translate_tailexpr env texpr in
     let f_label = fresh_function_label fi in
@@ -175,7 +182,10 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     insert_fun f_label fi n_code, nenv
 
   and translate_tailexpr env = function
-    | S.TLet(i, bexpr, texpr) -> failwith "TODO"
+    | S.TLet(i, bexpr, texpr) ->
+      let ncode, nenv = def_val ([], env) (i, bexpr) in
+      ncode @ (translate_tailexpr env texpr)
+
     | S.TIfThenElse(bexpr, texpr1, texpr2) -> failwith "TODO"
     | S.TPushCont(fi, idl, texpr) -> failwith "TODO"
     | S.TFunCall(bexpr, bl) -> failwith "TODO"
