@@ -205,6 +205,11 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       let bcomp = S.BinOp(S.Eq, cond, S.Num(1)) in
       translate_basicexpr env ( S.IfThenElse(bcomp, e1, e2) )
 
+    | S.BinOp(op, e1, e2) ->
+      if is_arith op
+      then generate_arith env (op, e1, e2)
+      else generate_comp env (op, e1, e2)
+
     | _ -> failwith "WHAT?!!"
 
     (* Functions related to Binary operations *)
@@ -236,5 +241,55 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       | S.Ge -> T.Ge
       | S.Gt -> T.Gt
       | _ -> failwith "Binop: invalid operation"
+
+    (*
+    In the following functions:
+    - generate_arith
+    - translate_op
+    - translate_arith
+
+    pre-condition: op is an arithmetic operator
+    *)
+    and generate_arith env (op, e1, e2) =
+      let c1 = translate_basicexpr env e1 in
+      let c2 = translate_basicexpr env e2 in
+      c1 @ c2 @ (translate_op env op)
+
+    (* Forward calculation (optimization) *)
+    and fwd_operate_artih x y = function
+    | S.Add -> x + y
+    | S.Sub -> x - y
+    | S.Mul -> x * y
+    | S.Div -> x / y
+    | S.Mod -> x mod y
+    | _ -> assert(false) (* comparison *)
+
+    (*
+      pre-condition: op is an arithmetic operator
+    *)
+    and translate_op env op =
+      match (translate_arith op) with
+      | Some(v) -> [(None, T.Binop(v))]
+      | None -> failwith "Binop: invalid operation"
+
+    and translate_arith =
+      function
+      | S.Add -> Some(T.Add)
+      | S.Sub -> Some(T.Sub)
+      | S.Mul -> Some(T.Mul)
+      | S.Div -> Some(T.Div)
+      | S.Mod -> Some(T.Rem)
+      | _ -> None
+
+    (*
+    In the following functions:
+    - generate_comp
+    - translate_cmp
+
+    pre-condition: op is a comparison operator
+    *)
+    and generate_comp env (op, e1, e2) =
+      let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
+      translate_basicexpr env if_comp
 
 (* --- *)
