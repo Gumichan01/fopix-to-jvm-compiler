@@ -169,7 +169,8 @@ let rec translate (p : S.t) (env : environment) =
 
   and def_cont (o_code, env) fi fe i texpr =
     let n_code = translate_tailexpr env texpr in
-    let v, b, nenv = bind_variable env i !(env.box_nextval) in
+    let nfenv = bind_function env fi (T.Label(fi)) in
+    let v, b, nenv = bind_variable nfenv i !(nfenv.box_nextval) in
     let _ = env_set_flag nenv true in
     let vstore = store_var v b in
     o_code @ n_code @ vstore, nenv
@@ -184,9 +185,9 @@ let rec translate (p : S.t) (env : environment) =
   and def_fun fi fo texpr env =
     let n_code = translate_tailexpr env texpr in
     let f_label = fresh_function_label fi in
-    let nenv = bind_function env fi f_label in
-    let nenv = bind_formals nenv fi fo in
-    let _ = (f_label,Labels.encode f_label) :: env.tableswitch in
+    let fnenv = bind_function env fi f_label in
+    let nenv = bind_formals fnenv fi fo in
+    let _ = (f_label, Labels.encode f_label) :: env.tableswitch in
     insert_fun f_label fi n_code, nenv
 
   and translate_tailexpr env = function
