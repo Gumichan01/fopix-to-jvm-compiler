@@ -17,7 +17,7 @@ let fresh_function_identifier =
   fun str -> incr r; let s = "_fun_" ^ str ^ (string_of_int !r) in s
 
 
-let rec translate (p : S.t) (env : environment) = (* TODO translate *)
+let rec translate (p : S.t) (env : environment) =
   let ldeflist, fdeflist = retrieve_definitions p in
   (* Just to test *)
   print_string("hello "^ string_of_int(List.length ldeflist) ^" - "
@@ -57,24 +57,24 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     match funclist with
     | [] -> []
 
-    | (S.DefFun(_,_,_) as df)::q ->
-      let kdef = (translate_function env df) in
+    | (S.DefFun(fi, argv, e))::q ->
+      let kdef = T.DefFun(fi , argv, translate_expr env e) in
       kdef :: (translate_funs env q)
 
     | _ -> assert(false) (* pre-condition : list of S.DefFun *)
 
-  (* Is this function necessary? *)
-  and translate_function env f = failwith "TODO definition of function"
 
   (* Should I return a pair <T.tailexpr, environment> instead of T.tailexpr? *)
   and translate_expr env =
     function
     | S.Simple(sexpr) -> T.TContCall(translate_simple sexpr)
 
-    | S.Let(id, S.FunCall(e, argv), e2) ->
-      let e1 = S.FunCall(e, argv) in
+    | S.Let(id, S.FunCall(S.FunName(fi), argv), e2) ->
+      let e1 = S.FunCall(S.FunName(fi), argv) in
       let aux_e = fresh_function_identifier id in
       T.TPushCont(aux_e, [], (translate_expr env e1))
+
+    | S.Let(id, S.FunCall(_, argv), e2) -> assert(false) (* FunCall must contain FunName *)
 
     | S.Let(id, e1, e2) ->
       (match translate_expr_tobasic env e1 with
