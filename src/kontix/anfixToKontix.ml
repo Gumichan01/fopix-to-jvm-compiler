@@ -11,6 +11,12 @@ type environment = unit (* TODO *)
 
 let initial_environment () = () (* TODO *)
 
+(* Create a fresh T.function_identifier *)
+let fresh_function_identifier =
+  let r = ref 0 in
+  fun str -> incr r; let s = "_fun_" ^ str ^ (string_of_int !r) in s
+
+
 let rec translate (p : S.t) (env : environment) = (* TODO translate *)
   let ldeflist, fdeflist = retrieve_definitions p in
   (* Just to test *)
@@ -65,6 +71,11 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
     function
     | S.Simple(sexpr) -> T.TContCall(translate_simple sexpr)
 
+    | S.Let(id, S.FunCall(e, argv), e2) ->
+      let e1 = S.FunCall(e, argv) in
+      let aux_e = fresh_function_identifier id in
+      T.TPushCont(aux_e, [], (translate_expr env e1))
+
     | S.Let(id, e1, e2) ->
       (match translate_expr_tobasic env e1 with
       | Some(bexpr1) ->
@@ -72,7 +83,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
          | Some(bexpr2) -> T.TContCall(T.Let(id, bexpr1, bexpr2))
          | None -> T.TLet(id, bexpr1, (translate_expr env e2))
         )
-      | None -> failwith "TODO: FunCall in Let")
+      | None -> assert(false)) (* It is a FunCall -> I already checked this, WTF? *)
 
     | S.IfThenElse(c, e1, e2) ->
       T.TIfThenElse((translate_simple c), (translate_expr env e1), (translate_expr env e2))
@@ -125,7 +136,7 @@ let rec translate (p : S.t) (env : environment) = (* TODO translate *)
 
     | S.Print(s) -> Some(T.Print(s))
 
-  and translate_simple (* : T.basicexpr *) =
+  and translate_simple =
     function
     | S.Num(x) -> T.Num(x)
     | S.FunName(s) -> T.FunName(s)
