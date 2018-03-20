@@ -72,6 +72,8 @@ let rec translate (p : S.t) (env : environment) =
     | S.Let(id, S.FunCall(S.FunName(fi), argv), e2) ->
       let e1 = S.FunCall(S.FunName(fi), argv) in
       let aux_e = fresh_function_identifier id in
+      (* I have to do something like
+        T.DefCont(aux_e, [...], id, translate_expr(e2)) *)
       T.TPushCont(aux_e, [], (translate_expr env e1))
 
     | S.Let(id, S.FunCall(_, argv), e2) -> assert(false) (* FunCall must contain FunName *)
