@@ -203,7 +203,7 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     | S.TContCall(bexpr) -> translate_basicexpr env bexpr
 
   and translate_basicexpr env = function
-    | S.Num(x) -> (None, T.Bipush(x))::[]
+    | S.Num(x) -> (None, T.Bipush(x)) :: []
 
     | S.FunName fn -> failwith "FunName: What should I do?"
 
