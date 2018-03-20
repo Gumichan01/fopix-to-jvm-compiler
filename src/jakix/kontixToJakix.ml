@@ -127,11 +127,19 @@ module Labels :
        T.Label("endif" ^ "<" ^ string_of_int rr ^ ">") )
    )
 
+let basic_program code =
+  { T.classname = "Kontix";
+    T.code = code;
+    T.varsize = 100;
+    T.stacksize = 10000; }
 
-let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
-  let rec program env defs =
-    let code, env = List.fold_left translate_definition ([], env) defs in
-    code @ (translate_exit env), env
+
+let rec translate (p : S.t) (env : environment) =
+  let rec program env (defs : S.t) =
+    let dl, tail = defs in
+    let code, nenv = List.fold_left translate_definition ([], env) dl in
+    let tcode = translate_tailexpr nenv tail in
+    basic_program (code @ tcode @ (translate_exit nenv)), nenv
 
     (* proper exit in javix *)
   and translate_exit env =
@@ -210,9 +218,11 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
     | S.Var v ->
       (match (find_variable env v) with
        | Some(jv, bv) -> load_var jv bv
-       | None -> failwith "No Javix variable binded to this Fopix var")
+       | None -> failwith "No Jakix variable binded to this kontix var")
 
-    | S.Let(i, bexpr1, bexpr2) -> failwith "What should I do?"
+    | S.Let(i, bexpr1, bexpr2) -> (* ... *)
+      let ncode, nenv = def_val ([], env) (i, bexpr1) in
+      ncode @ (translate_basicexpr env bexpr2)
 
     | S.IfThenElse (S.BinOp(op, a1, a2), e1, e2) when is_arith op = false ->
       let terms  = translate_basicexpr env a1 @ translate_basicexpr env a2 in
@@ -303,15 +313,6 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       let c2 = translate_basicexpr env e2 in
       c1 @ c2 @ (translate_op env op)
 
-    (* Forward calculation (optimization) *)
-    and fwd_operate_artih x y = function
-    | S.Add -> x + y
-    | S.Sub -> x - y
-    | S.Mul -> x * y
-    | S.Div -> x / y
-    | S.Mod -> x mod y
-    | _ -> assert(false) (* comparison *)
-
     (*
       pre-condition: op is an arithmetic operator
     *)
@@ -340,4 +341,5 @@ let rec translate (p : S.t) env = (failwith "TODO" : T.t * environment)
       let if_comp = S.IfThenElse(S.BinOp(op, e1, e2), S.Num(1), S.Num(0) ) in
       translate_basicexpr env if_comp
 
+  in program env p
 (* --- *)
