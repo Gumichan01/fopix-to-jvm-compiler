@@ -20,7 +20,6 @@ type environment = {
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
   function_formals : (S.function_identifier * S.formals) list;
-  tableswitch      : (T.label * int) list;
   optimize         : bool;
   mutable box_nextval: bool ref;
 }
@@ -31,7 +30,6 @@ let initial_environment () = {
   variables        = [];
   function_labels  = [];
   function_formals = [];
-  tableswitch      = [];
   optimize         = false;
   box_nextval      = ref true;
 }
@@ -54,9 +52,6 @@ let fresh_function_label =
   fun f ->
     incr r;
     T.Label (f ^ "_body_" ^ string_of_int !r)
-
-let lookup_tableswitch l env =
-  List.assoc l env.tableswitch
 
 (** Variables *)
 
@@ -260,7 +255,7 @@ let translate p env : T.t * environment =
     let default_label = T.Label("default") in
     let dispatch_label = Some(T.Label("dispatch")) in
     let default_dispatch = tableswitch_default_dispatch env default_label in
-    let labels = List.map (fun (l,v) -> l) env.tableswitch in
+    let labels = List.map (fun (v,l) -> l) (Labels.all_encodings ()) in
     let tableswitch_instr = T.Tableswitch(1000, labels, default_label) in
     let tableswitch = (dispatch_label, tableswitch_instr) in
     default_dispatch @ tableswitch :: []
@@ -309,7 +304,7 @@ let translate p env : T.t * environment =
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
-    let _ = (f_label,Labels.encode f_label) :: env.tableswitch in
+    let _ = (Labels.encode f_label,f_label) :: (Labels.all_encodings ()) in
     insert_fun f_label fi n_code, nenv
 
   and translate_expr env = function
@@ -500,7 +495,7 @@ let translate p env : T.t * environment =
     and funcall_prologue env e el =
       let f = translate_expr env e in
       let s = save_vars env e el in
-      let _ = get_return_address env e el in
+      let r = get_return_address env e el in
       let _ = push_args env e el in
       f @ s
       (*  Then push return address
@@ -508,7 +503,8 @@ let translate p env : T.t * environment =
           Then Goto F via Calcul Goto Dispatch *)
 
     and get_return_address env e el =
-      failwith "Students! This is our job (Get/Compute Return Addresses)"
+      let rl = fresh_function_label "return_to_callee" in
+      rl
 
     and push_args env e el =
       let _ = List.map (fun x -> translate_expr env x) el in
