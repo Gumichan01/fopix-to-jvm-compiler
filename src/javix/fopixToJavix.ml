@@ -15,7 +15,7 @@ module T = Target.AST
     along the translation: *)
 type environment = {
   nextvar            : int;
-  variables          : (S.identifier * T.var * bool) list;
+  variables          : (S.identifier * (T.var * bool)) list;
   function_labels    : (S.function_identifier * T.label) list;
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
@@ -66,19 +66,14 @@ let bind_variable env x b =
   b,
   { env with
     nextvar = env.nextvar + 1;
-    variables = (x,v,b) :: env.variables }
+    variables = (x,(v,b)) :: env.variables }
 
 let clear_all_variables env = {env with variables = []; nextvar = 0}
 
 let find_variable env v =
-  let rec aux_find_variable l v =
-    match l with
-    | [] -> None
-    | (fv, jv, bv)::t ->
-      if fv = v then Some(jv, bv)
-      else aux_find_variable t v
-  in aux_find_variable env.variables v
-
+  let v,b = List.assoc v env.variables in
+  Some(v,b)
+ 
 (** Functions *)
 
 let bind_function env f l =
