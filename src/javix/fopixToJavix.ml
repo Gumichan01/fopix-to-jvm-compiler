@@ -14,14 +14,15 @@ module T = Target.AST
 (** We will need the following pieces of information to be carrying
     along the translation: *)
 type environment = {
-  nextvar          : int;
-  variables        : (S.identifier * T.var * bool) list;
-  function_labels  : (S.function_identifier * T.label) list;
+  nextvar            : int;
+  variables          : (S.identifier * T.var * bool) list;
+  function_labels    : (S.function_identifier * T.label) list;
   (** [function_formals] maintains the relation between function identifiers
       and their formal arguments. *)
-  function_formals : (S.function_identifier * S.formals) list;
-  optimize         : bool;
+  function_formals   : (S.function_identifier * S.formals) list;
+  optimize           : bool;
   mutable box_nextval: bool ref;
+  mutable in_def_fun : bool ref;
 }
 
 (** Initially, the environment is empty. *)
@@ -32,6 +33,7 @@ let initial_environment () = {
   function_formals = [];
   optimize         = false;
   box_nextval      = ref true;
+  in_def_fun       = ref false;
 }
 
 let env_opt env enableopt = { env with optimize = enableopt }
@@ -89,8 +91,11 @@ let bind_formals env func fo =
 
 (** Environment *)
 
-let env_set_flag env b =
+let env_set_boxflag env b =
   env.box_nextval := b
+
+let env_set_funflag env f =
+  env.in_def_fun := f
 
 (** For return addresses (or later higher-order functions),
     we encode some labels as numbers. These numbers could then
@@ -293,9 +298,10 @@ let translate p env : T.t * environment =
      the top of the stack, box it, and store it in a variable indexed by v
   *)
   and def_val (o_code, env) (i, e) =
+    let _ = env_set_funflag env false in
     let n_code = translate_expr env e in
     let v, b, nenv = bind_variable env i !(env.box_nextval) in
-    let _ = env_set_flag nenv true in
+    let _ = env_set_boxflag nenv true in
     let vstore = store_var v b in
     o_code @ n_code @ vstore, nenv
 
@@ -303,6 +309,7 @@ let translate p env : T.t * environment =
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
+    let _ = env_set_funflag nenv true in
     let n_code = translate_expr nenv e in
     let _ = Labels.encode f_label in
     insert_fun f_label fi n_code, nenv
@@ -364,7 +371,7 @@ let translate p env : T.t * environment =
 
     | S.BlockNew e ->
       let b = translate_expr env e in
-      let _ = env_set_flag env false in
+      let _ = env_set_boxflag env false in
       b @ (None, T.Comment "Creating block") :: (None, T.Anewarray) :: []
 
     | S.BlockGet (e1,e2) ->
