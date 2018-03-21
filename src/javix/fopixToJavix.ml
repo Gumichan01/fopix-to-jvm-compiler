@@ -244,10 +244,10 @@ let opt_program code =
     using [env] to retrieve contextual information. *)
 let translate p env : T.t * environment =
   let rec program env defs =
-    let optenv = env_opt env false in (* no optimization by default *)
+    let optenv = env_opt env true in (* no optimization by default *)
     let code, nenv = List.fold_left translate_definition ([], optenv) defs in
-    let tableswitch = insert_tableswitch optenv in
-    opt_program (code @ (translate_exit nenv) @ tableswitch), nenv
+    let _ (* tableswitch *) = insert_tableswitch optenv in
+    opt_program (code @ (translate_exit nenv) (*@ tableswitch*)), nenv
 
   (* proper exit in javix *)
   and translate_exit env =
@@ -375,15 +375,16 @@ let translate p env : T.t * environment =
     | S.BlockGet (e1,e2) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
-      b @ i @ (None, T.Comment "Getting from block") :: (None, T.AAload) :: []
+      b @ i @ (None, T.Comment "Getting from block") :: (None, T.AAload) ::
+      (None, T.Unbox) :: []
 
     | S.BlockSet (e1,e2,e3) ->
       let b = translate_expr env e1 in
       let i = translate_expr env e2 in
       let v = translate_expr env e3 in
       (* Adding a T.Bipush(0) as a return value for the S.DefVal *)
-      b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.AAstore) ::
-      (None, T.Bipush(0)) :: []
+      b @ i @ v @ (None, T.Comment "Setting block") :: (None, T.Box) ::
+      (None, T.AAstore) :: (None, T.Bipush(0)) :: []
 
     | S.FunCall (e, el) ->
       let p = funcall_prologue env e el in
