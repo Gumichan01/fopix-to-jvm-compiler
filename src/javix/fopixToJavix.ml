@@ -282,7 +282,7 @@ let translate p env : T.t * environment =
 
   (* insert Javix function *)
   and insert_fun label fi code =
-    (Some(label),T.Comment("Starting " ^ fi ^ " function")) :: code
+    (Some(label),T.Comment("Start of " ^ fi ^ " function")) :: code
 
   and translate_definition (o_code, env) = function
     | S.DefVal (i, e) -> def_val (o_code, env) (i, e)
@@ -300,11 +300,11 @@ let translate p env : T.t * environment =
     o_code @ n_code @ vstore, nenv
 
   and def_fun fi fo e env =
-    let n_code = translate_expr env e in
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
-    let _ = (Labels.encode f_label,f_label) :: (Labels.all_encodings ()) in
+    let n_code = translate_expr nenv e in
+    let _ = Labels.encode f_label in
     insert_fun f_label fi n_code, nenv
 
   and translate_expr env = function
