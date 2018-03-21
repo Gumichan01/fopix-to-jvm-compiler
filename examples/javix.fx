@@ -3,21 +3,17 @@
     javix.fx is a custom file that will contain instruction to compiler
     from Fopix To Javix
 */
-
+/*
+val a = 42
 val x = 10
 val y = 1 + 2
 val z = x + y
-val b = (1 = 1)
+val bimp = if z = 13 then (if y = 3 then (if x = 10 then 1 else a) else a / 2) else 0*/
 
-val bt = if 1 = 1 then 1 else 2
-val bf = if 42 - 1 + 2 + 3 - 4 then 1 else 2
-
-val a = 42
-val bta = if a then 1 else 2
-
-
-val z = 13
-val bimp = if z = 13 then (if 1 = 1 then (if 1 = 10 then 1 else 30) else 20) else 0
+val block = new [2]
+eval block[0] := 1
+eval block[1] := 1
+val ret = block[0] - block[1]
 
 /*
 def fact(x) = if x = 0 then 1 else x * fact(x-1)
