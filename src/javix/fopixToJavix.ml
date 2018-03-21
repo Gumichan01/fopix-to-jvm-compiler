@@ -22,7 +22,7 @@ type environment = {
   function_formals   : (S.function_identifier * S.formals) list;
   optimize           : bool;
   mutable box_nextval: bool ref;
-  mutable in_def_fun : bool ref;
+  mutable in_def_fun : S.function_identifier option ref;
 }
 
 (** Initially, the environment is empty. *)
@@ -33,7 +33,7 @@ let initial_environment () = {
   function_formals = [];
   optimize         = false;
   box_nextval      = ref true;
-  in_def_fun       = ref false;
+  in_def_fun       = ref None;
 }
 
 let env_opt env enableopt = { env with optimize = enableopt }
@@ -71,8 +71,27 @@ let bind_variable env x b =
 let clear_all_variables env = {env with variables = []; nextvar = 0}
 
 let find_variable env v =
-  let v,b = List.assoc v env.variables in
-  Some(v,b)
+  try
+    let v,b = List.assoc v env.variables in
+    Some(v,b)
+  with Not_found -> None
+
+let find_variable_with_param env v =
+  try
+    let v,b = List.assoc v env.variables in
+    Some(v,b)
+  with Not_found -> (
+    try
+      match !(env.in_def_fun) with
+      | Some(fi) ->
+      (
+        let fo = lookup_function_formals fi env in
+        let _ = List.find (fun x -> x == v) fo in
+        failwith "Need to return a Javix variable :/"
+      )
+      | None -> None
+    with Not_found -> None
+  )
  
 (** Functions *)
 
@@ -84,7 +103,7 @@ let bind_formals env func fo =
   { env with
     function_formals = (func,fo) :: env.function_formals }
 
-(** Environment *)
+ (** Environment *)
 
 let env_set_boxflag env b =
   env.box_nextval := b
@@ -293,7 +312,7 @@ let translate p env : T.t * environment =
      the top of the stack, box it, and store it in a variable indexed by v
   *)
   and def_val (o_code, env) (i, e) =
-    let _ = env_set_funflag env false in
+    let _ = env_set_funflag env None in
     let n_code = translate_expr env e in
     let v, b, nenv = bind_variable env i !(env.box_nextval) in
     let _ = env_set_boxflag nenv true in
@@ -304,7 +323,7 @@ let translate p env : T.t * environment =
     let f_label = fresh_function_label fi in
     let nenv = bind_function env fi f_label in
     let nenv = bind_formals nenv fi fo in
-    let _ = env_set_funflag nenv true in
+    let _ = env_set_funflag nenv (Some(fi)) in
     let n_code = translate_expr nenv e in
     let _ = Labels.encode f_label in
     insert_fun f_label fi n_code, nenv
@@ -318,9 +337,11 @@ let translate p env : T.t * environment =
       in (None, T.Comment("What to do here? Bipush an Int?")) :: []
 
     | S.Var v ->
-      (match (find_variable env v) with
-      | Some(jv, bv) -> load_var jv bv
-      | None -> failwith "No Javix variable binded to this Fopix var")
+      (
+        match (find_variable env v) with
+        | Some(jv, bv) -> load_var jv bv
+        | None -> failwith "Translating: No Javix variable binded to this Fopix var"
+      )
 
     | S.Let (i, e1, e2) ->
       (
@@ -495,18 +516,19 @@ let translate p env : T.t * environment =
     (* FunCall related functions *)
 
     and funcall_prologue env e el =
-      let f = translate_expr env e in
-      let s = save_vars env e el in
-      let r = get_return_address env e el in
+      (*let f = translate_expr env e in*)
+      let _ = save_vars env e el in
+      let rl,bp = get_return_address env e el in
       let _ = push_args env e el in
-      f @ s
+      bp :: []
       (*  Then push return address
           Then push args into stack
           Then Goto F via Calcul Goto Dispatch *)
 
     and get_return_address env e el =
       let rl = fresh_function_label "return_to_callee" in
-      rl
+      let bp = (None,T.Bipush(Labels.encode rl)) in
+      rl,bp
 
     and push_args env e el =
       let _ = List.map (fun x -> translate_expr env x) el in
@@ -532,7 +554,7 @@ let translate p env : T.t * environment =
         | (S.Var v)::t ->
           (match (find_variable env v) with
             | Some(jv, bv) -> (store_var jv bv) :: save_var_aux env t
-            | None -> failwith "No Javix variable binded to this Fopix var")
+            | None -> failwith "Saving: No Javix variable binded to this Fopix var")
         | [] -> []
         | _::t -> save_var_aux env t
       in List.flatten (save_var_aux env el)
@@ -542,17 +564,17 @@ let translate p env : T.t * environment =
         X Restore Vars
         X Goto Dispatch *)
     and funcall_epilogue env e el =
-      let r = restore_vars env e el in
+      let _ = restore_vars env e el in
       let s = (None, T.Swap) in
       let g = (None, T.Goto(T.Label("dispatch"))) in
-      r @ s :: g :: []
+      s :: g :: []
 
     and restore_vars env e el =
       let rec r_vars_aux env = function
         | (S.Var v)::t ->
           (match (find_variable env v) with
             | Some(jv, bv) -> (load_var jv bv) :: r_vars_aux env t
-            | None -> failwith "No Javix variable binded to this Fopix var")
+            | None -> failwith "Restoring: No Javix variable binded to this Fopix var")
         | _::t -> r_vars_aux env t
         | [] -> []
       in List.flatten (r_vars_aux env el)
